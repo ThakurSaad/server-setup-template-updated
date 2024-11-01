@@ -1,44 +1,74 @@
-const otpResendTemp = (data) => `
-    <html>
-    <head>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            color: #333;
-        }
-        p {
-            color: #555;
-            line-height: 1.5;
-        }
-        .footer {
-            margin-top: 20px;
-            font-size: 12px;
-            color: #999;
-        }
-    </style>
-    <body>
-    <div class="container">
-        <h1>Hello, ${data.user}</h1>
-        <p>Your new code is: <strong>${data.code}</strong></p>
-         <p>This code will be valid for the next ${data.expiresIn} minutes.</p>
-        <p>Please use this code to activate your account. If you did not request this, please ignore this email.</p>
-        <p>Thank you!</p>
-    </div>
-    </body>
-    </html>
- `;
+const otpResendTemp = (data) =>
+  `<html>
+      <head>
+      <style>
+          body {
+              font-family: Arial, sans-serif;
+              background-color: #f2f3f8;
+              margin: 0;
+              padding: 0;
+          }
+          .container {
+              max-width: 600px;
+              margin: 40px auto;
+              background: #ffffff;
+              padding: 40px;
+              border-radius: 10px;
+              box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+          }
+          h1 {
+              color: #1a73e8;
+              font-size: 26px;
+              margin-bottom: 20px;
+              font-weight: bold;
+          }
+          p {
+              color: #555555;
+              line-height: 1.8;
+              font-size: 16px;
+              margin-bottom: 20px;
+          }
+          .code {
+              display: inline-block;
+              background-color: #e8f0fe;
+              padding: 14px 24px;
+              font-size: 20px;
+              font-weight: bold;
+              color: #1a73e8;
+              border-radius: 6px;
+              letter-spacing: 2px;
+              margin: 20px 0;
+          }
+          .footer {
+              margin-top: 30px;
+              font-size: 13px;
+              color: #9e9e9e;
+              text-align: center;
+          }
+          .footer p {
+              margin: 5px 0;
+          }
+          a {
+              color: #1a73e8;
+              text-decoration: none;
+          }
+      </style>
+      </head>
+          <body>
+              <div class="container">
+                  <h1>Hello, ${data.user}</h1>
+                  <p>We're sending you this message because you've requested to receive a new OTP code.</p>
+                  <p>Your new code is:</p>
+                  <p class="code">${data.code}</p>
+                  <p>This code will be valid for the next <strong>${data.expiresIn} minutes</strong>.</p>
+                  <p>If you did not request this code, please disregard this message. For assistance, reach out to us.</p>
+                  <p>Thank you,<br>Your Car Rental Team</p>
+              </div>
+              <div class="footer">
+                  <p>&copy; Car Rental - All Rights Reserved.</p>
+                  <p>For support, contact us at <a href="mailto:support@company.com">support@company.com</a></p>
+              </div>
+          </body>
+      </html>`;
 
 module.exports = otpResendTemp;

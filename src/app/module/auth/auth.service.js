@@ -105,7 +105,7 @@ const registrationAccount = async (payload) => {
 const resendActivationCode = async (payload) => {
   const email = payload.email;
   const user = await Auth.isAuthExist(email);
-  if (!user.email) throw new ApiError(status.BAD_REQUEST, "Email not found!");
+  if (!user) throw new ApiError(status.BAD_REQUEST, "Email not found!");
 
   const activationCode = createActivationToken().activationCode;
   const activationCodeExpire = new Date(Date.now() + 3 * 60 * 1000);
