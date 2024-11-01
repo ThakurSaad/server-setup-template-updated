@@ -122,6 +122,36 @@ const deleteFaq = catchAsync(async (req, res) => {
   });
 });
 
+const addContactUs = catchAsync(async (req, res) => {
+  const result = await ManageService.addContactUs(req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: result.message ? result.message : "Successful",
+    data: result.result ? result.result : result,
+  });
+});
+
+const getContactUs = catchAsync(async (req, res) => {
+  const result = await ManageService.getContactUs();
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Successful",
+    data: result,
+  });
+});
+
+const deleteContactUs = catchAsync(async (req, res) => {
+  const result = await ManageService.deleteContactUs(req.query);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Deletion Successful",
+    data: result,
+  });
+});
+
 const ManageController = {
   addPrivacyPolicy,
   getPrivacyPolicy,
@@ -135,6 +165,9 @@ const ManageController = {
   addFaq,
   getFaq,
   deleteFaq,
+  addContactUs,
+  getContactUs,
+  deleteContactUs,
 };
 
 module.exports = ManageController;

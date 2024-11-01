@@ -24,6 +24,7 @@ const privacySchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
 const faqSchema = new mongoose.Schema(
   {
     description: {
@@ -35,7 +36,20 @@ const faqSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
 const aboutUsSchema = new mongoose.Schema(
+  {
+    description: {
+      type: String,
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+const contactUsSchema = new mongoose.Schema(
   {
     description: {
       type: String,
@@ -52,4 +66,5 @@ module.exports = {
   TermsConditions: model("TermsConditions", termsAndConditionsSchema),
   FAQ: model("FAQ", faqSchema),
   AboutUs: model("AboutUs", aboutUsSchema),
+  ContactUs: model("ContactUs", contactUsSchema),
 };

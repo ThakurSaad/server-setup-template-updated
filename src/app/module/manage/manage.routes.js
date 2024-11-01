@@ -41,10 +41,17 @@ router
   )
   .post("/add-faq", auth(ENUM_USER_ROLE.ADMIN), ManageController.addFaq)
   .get("/get-faq", ManageController.getFaq)
-  .delete(
-    "/delete-faq",
+  .delete("/delete-faq", auth(ENUM_USER_ROLE.ADMIN), ManageController.deleteFaq)
+  .post(
+    "/add-contact-us",
     auth(ENUM_USER_ROLE.ADMIN),
-    ManageController.deleteFaq
+    ManageController.addContactUs
+  )
+  .get("/get-contact-us", ManageController.getContactUs)
+  .delete(
+    "/delete-contact-us",
+    auth(ENUM_USER_ROLE.ADMIN),
+    ManageController.deleteContactUs
   );
 
 module.exports = router;
