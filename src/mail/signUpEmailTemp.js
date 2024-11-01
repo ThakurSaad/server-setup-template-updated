@@ -50,9 +50,9 @@ const signUpEmailTemp = (data) => `
   </head>
   <body>
     <div class="container">
-      <h1>Welcome to Laundry App</h1>
+      <h1>Welcome to Car Rental</h1>
       <p>Hello ${data?.user},</p>
-      <p>Thank you for registering with Laundry App. To activate your account, please use the following activation code:</p>
+      <p>Thank you for registering with Car Rental. To activate your account, please use the following activation code:</p>
       <h1>${data?.activationCode}</h1>
       <p>Please enter this code on the activation page within the next ${data?.activationCodeExpire} minutes.</p>
       <p>If you have any questions, please contact us at <a href="mailto:thakursaad613@gmail.com">thakursaad613@gmail.com</a>.</p>

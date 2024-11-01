@@ -1,94 +1,94 @@
 const { Error: mongooseError } = require("mongoose");
 const config = require("../../config");
-
 const handleValidationError = require("../../error/handleValidationError");
 const handleCastError = require("../../error/handleCastError");
 const ApiError = require("../../error/ApiError");
 const { JsonWebTokenError, TokenExpiredError } = require("jsonwebtoken");
-const httpStatus = require("http-status");
+
+const createErrorMessage = (message, path = "") => [{ path, message }];
 
 const globalErrorHandler = (error, req, res, next) => {
-  config.env === "development"
-    ? console.log("globalErrorHandler", error)
-    : console.error("globalErrorHandler", error);
+  const logError = config.env === "development" ? console.log : console.error;
+  logError("globalErrorHandler", error);
 
-  let statusCode = 500;
-  let message = "Something went wrong!";
-  let errorMessages = [];
+  // Default values
+  let statusCode = error?.statusCode || 500;
+  let message = error?.message || "Something went wrong!";
+  let errorMessages = createErrorMessage(message);
 
-  if (error?.name === "ValidationError") {
-    const simplifiedError = handleValidationError(error);
-
-    console.log("==============", simplifiedError);
-
-    statusCode = simplifiedError.statusCode;
-    message = simplifiedError.message;
-    errorMessages = simplifiedError.errorMessages;
-  } else if (error instanceof JsonWebTokenError) {
-    statusCode = 401;
-    message = "Invalid token";
-    errorMessages = [
-      {
-        path: "",
-        message: error.message,
-      },
-    ];
-  } else if (error instanceof TokenExpiredError) {
-    statusCode = 401;
-    message = "Token has expired";
-    errorMessages = [
-      {
-        path: "",
-        message: error.message,
-      },
-    ];
-  } else if (error?.name === "CastError") {
-    const simplifiedError = handleCastError(error);
-    statusCode = simplifiedError.statusCode;
-    message = simplifiedError.message;
-    errorMessages = simplifiedError.errorMessages;
-  } else if (error instanceof ApiError) {
-    statusCode = error?.statusCode;
-    message = error.message;
-    errorMessages = error?.message
-      ? [
-          {
-            path: "",
-            message: error?.message,
-          },
-        ]
-      : [];
-  } else if (error.code === 11000) {
-    statusCode = 409;
-    const field = Object.keys(error.keyValue)[0];
-    message = `${field} must be unique`;
-    errorMessages = [
-      {
-        path: field,
+  // Error type handlers
+  const errorHandlers = {
+    ValidationError: () => {
+      const {
+        statusCode: code,
+        message,
+        errorMessages: messages,
+      } = handleValidationError(error);
+      return { statusCode: code || 400, message, errorMessages: messages };
+    },
+    JsonWebTokenError: () => ({
+      statusCode: 401,
+      message: "Invalid token",
+      errorMessages: createErrorMessage(error.message),
+    }),
+    TokenExpiredError: () => ({
+      statusCode: 401,
+      message: "Token has expired",
+      errorMessages: createErrorMessage(error.message),
+    }),
+    CastError: () => {
+      const {
+        statusCode: code,
+        message,
+        errorMessages: messages,
+      } = handleCastError(error);
+      return { statusCode: code || 400, message, errorMessages: messages };
+    },
+    ApiError: () => ({
+      statusCode: error?.statusCode || 500,
+      message: error.message,
+      errorMessages: createErrorMessage(error.message),
+    }),
+    DuplicateKeyError: () => {
+      const field = Object.keys(error.keyValue)[0];
+      return {
+        statusCode: 409,
         message: `${field} must be unique`,
-      },
-    ];
-  } else if (error instanceof TypeError) {
-    statusCode = 400;
-    message = error.message;
-    errorMessages = [
-      {
-        path: "",
-        message: error.message,
-      },
-    ];
-  } else if (error instanceof mongooseError) {
-    message = error?.message;
-    errorMessages = error?.message
-      ? [
-          {
-            path: "",
-            message: error?.message,
-          },
-        ]
-      : [];
+        errorMessages: createErrorMessage(`${field} must be unique`, field),
+      };
+    },
+    TypeError: () => ({
+      statusCode: 400,
+      message: error.message,
+      errorMessages: createErrorMessage(error.message),
+    }),
+    mongooseError: () => ({
+      statusCode: 500,
+      message: error.message,
+      errorMessages: createErrorMessage(error.message),
+    }),
+  };
+
+  // Determine the specific error handler
+  const errorType =
+    (error && errorHandlers[error.name]) ||
+    (error instanceof JsonWebTokenError && errorHandlers.JsonWebTokenError) ||
+    (error instanceof TokenExpiredError && errorHandlers.TokenExpiredError) ||
+    (error instanceof ApiError && errorHandlers.ApiError) ||
+    (error.code === 11000 && errorHandlers.DuplicateKeyError) ||
+    (error instanceof TypeError && errorHandlers.TypeError) ||
+    (error instanceof mongooseError && errorHandlers.mongooseError);
+
+  if (errorType) {
+    ({ statusCode, message, errorMessages } = errorType());
   }
 
+  // Ensure valid HTTP status code
+  if (!Number.isInteger(statusCode) || statusCode < 100 || statusCode > 599) {
+    statusCode = 500;
+  }
+
+  // Response
   res.status(statusCode).json({
     success: false,
     message,

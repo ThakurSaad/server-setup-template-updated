@@ -19,26 +19,22 @@ const resetPassEmailTemp = require("../../../mail/resetPassEmailTemp");
 const registrationAccount = async (payload) => {
   const { role, password, confirmPassword, email, ...other } = payload;
 
-  if (!role || !Object.values(ENUM_USER_ROLE).includes(role)) {
+  if (!role || !Object.values(ENUM_USER_ROLE).includes(role))
     throw new ApiError(status.BAD_REQUEST, "Valid Role is required!");
-  }
-  if (!password || !confirmPassword || !email) {
+  if (!password || !confirmPassword || !email)
     throw new ApiError(
       status.BAD_REQUEST,
       "Email, Password, and Confirm Password are required!"
     );
-  }
-  if (password !== confirmPassword) {
+  if (password !== confirmPassword)
     throw new ApiError(
       status.BAD_REQUEST,
       "Password and Confirm Password didn't match"
     );
-  }
 
   const existingAuth = await Auth.findOne({ email }).lean();
-  if (existingAuth?.isActive) {
+  if (existingAuth?.isActive)
     throw new ApiError(status.BAD_REQUEST, "Email already exists");
-  }
 
   if (existingAuth && !existingAuth.isActive) {
     await Promise.all([
@@ -82,12 +78,11 @@ const registrationAccount = async (payload) => {
 
   const createAuth = await Auth.create(auth);
 
-  if (!createAuth) {
+  if (!createAuth)
     throw new ApiError(
       status.INTERNAL_SERVER_ERROR,
       "Failed to create auth account"
     );
-  }
 
   other.authId = createAuth._id;
   other.email = email;
@@ -110,9 +105,7 @@ const registrationAccount = async (payload) => {
 const resendActivationCode = async (payload) => {
   const email = payload.email;
   const user = await Auth.isAuthExist(email);
-  if (!user.email) {
-    throw new ApiError(status.BAD_REQUEST, "Email not found!");
-  }
+  if (!user.email) throw new ApiError(status.BAD_REQUEST, "Email not found!");
 
   const activationCode = createActivationToken().activationCode;
   const activationCodeExpire = new Date(Date.now() + 3 * 60 * 1000);

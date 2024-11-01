@@ -20,12 +20,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(express.static("uploads"));
+app.use("/uploads", express.static("uploads"));
 
 app.use("/", routes);
 
 app.get("/", async (req, res) => {
-  res.json("Welcome to Partner Transport");
+  res.json("Welcome to Car Rental");
 });
 
 app.use(globalErrorHandler);

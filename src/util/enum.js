@@ -1,5 +1,6 @@
 const ENUM_USER_ROLE = {
   USER: "USER",
+  HOST: "HOST",
   ADMIN: "ADMIN",
 };
 

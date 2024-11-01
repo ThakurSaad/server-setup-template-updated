@@ -14,9 +14,9 @@ const updateProfile = async (req) => {
       "Data is missing in the request body!"
     );
 
-  let profile_image = undefined;
+  let profile_image;
   if (files && files.profile_image)
-    profile_image = `/images/profile/${files.profile_image[0].filename}`;
+    profile_image = `/${files.profile_image[0].path}`;
 
   const updatedData = { ...data };
   const [auth, user] = await Promise.all([
@@ -68,7 +68,7 @@ const deleteMyAccount = async (payload) => {
     throw new ApiError(status.FORBIDDEN, "Password is incorrect");
   }
 
-  const [, ,] = await Promise.all([
+  Promise.all([
     Auth.deleteOne({ email }),
     User.deleteOne({ authId: isUserExist._id }),
   ]);

@@ -19,7 +19,7 @@ const logDir = path.join(process.cwd(), "logs", "winston");
 // Logger for general information
 const logger = createLogger({
   level: "info",
-  format: combine(label({ label: "Laundry App" }), timestamp(), myFormat),
+  format: combine(label({ label: "Car Rental" }), timestamp(), myFormat),
   transports: [
     new transports.Console(),
     new transports.File({
@@ -40,7 +40,7 @@ const logger = createLogger({
 // Logger for errors
 const errorLogger = createLogger({
   level: "error",
-  format: combine(label({ label: "Laundry App" }), timestamp(), myFormat),
+  format: combine(label({ label: "Car Rental" }), timestamp(), myFormat),
   transports: [
     new transports.Console(),
     new DailyRotateFile({

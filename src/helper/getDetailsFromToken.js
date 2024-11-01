@@ -1,9 +1,9 @@
 const httpStatus = require("http-status");
 const jwt = require("jsonwebtoken");
 const config = require("../config");
-const ApiError = require("../errors/ApiError");
-const Admin = require("../app/modules/admin/admin.model");
-const User = require("../app/modules/auth/auth.model");
+const ApiError = require("../error/ApiError");
+const Admin = require("../app/module/admin/admin.model");
+const User = require("../app/module/auth/auth.model");
 const { ENUM_USER_ROLE } = require("../util/enum");
 
 const getUserDetailsFromToken = async (token) => {
