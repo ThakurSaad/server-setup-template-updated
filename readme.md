@@ -1,5 +1,7 @@
 ### Payment management
 
+```
+
 +-------------------+        +-------------------+        +--------------------+
 |      USER         | -----> |      BACKEND      | -----> |     STRIPE         |
 |                   |        |                   |        |                    |
@@ -28,3 +30,5 @@
 | Marks Booking     |        | Transfer Payment  |        | Transfer Funds to  |
 | Completed         |        | to Host           |        | Host's Bank Account|
 +-------------------+        +-------------------+        +--------------------+
+
+```
