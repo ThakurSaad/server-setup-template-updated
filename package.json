@@ -1,0 +1,44 @@
+{
+  "name": "track-trek",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "lint:check": "eslint --ignore-path .eslintignore --ext .js .",
+    "lint:fix": "eslint . --fix",
+    "prettier:fix": "prettier --write .",
+    "prettier:check": "prettier --ignore-path .gitignore --check \"**/*.+(js|json)\"",
+    "lint-prettier": "yarn lint:check && yarn prettier:check"
+  },
+  "lint-staged": {
+    "src/**/*.js": "yarn lint-prettier"
+  },
+  "keywords": [],
+  "author": "thakur-saad",
+  "license": "ISC",
+  "description": "track booking and racing service",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.1",
+    "http-status": "^2.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongo": "^0.1.0",
+    "mongodb": "^6.11.0",
+    "mongoose": "^8.8.2",
+    "multer": "^1.4.5-lts.1",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.16",
+    "socket.io": "^4.8.1",
+    "stream": "^0.0.3",
+    "stripe": "^17.4.0",
+    "validator": "^13.12.0",
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0"
+  }
+}
