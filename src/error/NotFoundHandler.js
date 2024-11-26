@@ -1,6 +1,6 @@
 class NotFoundHandler {
-  static handle(req, res, next) {
-    res.status(404).json({
+  static handle(req, res) {
+    return res.status(404).json({
       success: false,
       message: "Not Found",
       errorMessages: [
@@ -10,7 +10,6 @@ class NotFoundHandler {
         },
       ],
     });
-    next();
   }
 }
 
