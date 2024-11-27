@@ -19,7 +19,7 @@ const AdminSchema = new Schema(
     profile_image: {
       type: String,
     },
-    phone_number: {
+    phoneNumber: {
       type: String,
     },
     address: {

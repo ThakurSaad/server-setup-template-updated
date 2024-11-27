@@ -1,31 +1,32 @@
 const bcrypt = require("bcrypt");
 const cron = require("node-cron");
+const { status } = require("http-status");
 
 const ApiError = require("../../../error/ApiError");
 const config = require("../../../config");
 const { jwtHelpers } = require("../../../helper/jwtHelpers");
-const { sendEmail } = require("../../../util/sendEmail");
 const { ENUM_USER_ROLE } = require("../../../util/enum");
 const { logger } = require("../../../shared/logger");
 const Auth = require("./auth.model");
-const createActivationToken = require("../../../util/createActivationToken");
+const codeGenerator = require("../../../util/codeGenerator");
 const User = require("../user/user.model");
 const Admin = require("../admin/admin.model");
-const { status } = require("http-status");
-const signUpEmailTemp = require("../../../mail/signUpEmailTemp");
-const otpResendTemp = require("../../../mail/otpResendTemp");
-const resetPassEmailTemp = require("../../../mail/resetPassEmailTemp");
+const validateFields = require("../../../util/validateFields");
+const EmailHelpers = require("../../../util/emailHelpers");
 
 const registrationAccount = async (payload) => {
-  const { role, password, confirmPassword, email, ...other } = payload;
+  const { role, name, password, confirmPassword, email } = payload;
 
-  if (!role || !Object.values(ENUM_USER_ROLE).includes(role))
-    throw new ApiError(status.BAD_REQUEST, "Valid Role is required!");
-  if (!password || !confirmPassword || !email)
-    throw new ApiError(
-      status.BAD_REQUEST,
-      "Email, Password, and Confirm Password are required!"
-    );
+  validateFields(payload, [
+    "password",
+    "confirmPassword",
+    "email",
+    "role",
+    "name",
+  ]);
+
+  if (!Object.values(ENUM_USER_ROLE).includes(role))
+    throw new ApiError(status.BAD_REQUEST, "Invalid role");
   if (password !== confirmPassword)
     throw new ApiError(
       status.BAD_REQUEST,
@@ -35,80 +36,52 @@ const registrationAccount = async (payload) => {
   const existingAuth = await Auth.findOne({ email }).lean();
   if (existingAuth?.isActive)
     throw new ApiError(status.BAD_REQUEST, "Email already exists");
+  if (existingAuth && !existingAuth.isActive)
+    return { message: "Already have an account. Please activate" };
 
-  if (existingAuth && !existingAuth.isActive) {
-    await Promise.all([
-      existingAuth.role === ENUM_USER_ROLE.USER &&
-        User.deleteOne({ authId: existingAuth._id }),
-      existingAuth.role === ENUM_USER_ROLE.ADMIN &&
-        Admin.deleteOne({ authId: existingAuth._id }),
-      Auth.deleteOne({ email }),
-    ]);
-  }
-
-  const activationCode = createActivationToken().activationCode;
-  const activationCodeExpire = Date.now() + 3 * 60 * 1000;
-  const auth = {
+  const { code: activationCode, expiredAt: activationCodeExpire } =
+    codeGenerator(3);
+  const authData = {
     role,
-    name: other.name,
+    name,
     email,
     password,
     activationCode,
     activationCodeExpire,
   };
   const data = {
-    user: other.name,
+    user: name,
     activationCode,
     activationCodeExpire: Math.round(
       (activationCodeExpire - Date.now()) / (60 * 1000)
     ),
   };
 
-  if (role === ENUM_USER_ROLE.USER) {
-    try {
-      sendEmail({
-        email: email,
-        subject: "Activate Your Account",
-        html: signUpEmailTemp(data),
-      });
-    } catch (error) {
-      throw new ApiError(status.INTERNAL_SERVER_ERROR, "Email was not sent");
-    }
-  }
+  if (role !== ENUM_USER_ROLE.ADMIN)
+    EmailHelpers.sendActivationEmail(email, data);
 
-  const createAuth = await Auth.create(auth);
+  const auth = await Auth.create(authData);
 
-  if (!createAuth)
-    throw new ApiError(
-      status.INTERNAL_SERVER_ERROR,
-      "Failed to create auth account"
-    );
+  const userData = {
+    authId: auth._id,
+    name,
+    email,
+  };
 
-  other.authId = createAuth._id;
-  other.email = email;
+  if (role === ENUM_USER_ROLE.ADMIN) await Admin.create(userData);
+  else await User.create(userData);
 
-  let result;
-  switch (role) {
-    case ENUM_USER_ROLE.USER:
-      result = await User.create(other);
-      break;
-    case ENUM_USER_ROLE.ADMIN:
-      result = await Admin.create(other);
-      break;
-    default:
-      throw new ApiError(status.BAD_REQUEST, "Invalid role provided!");
-  }
-
-  return { result, role, message: "Account created successfully!" };
+  return { message: "Account created successfully. Please check your email" };
 };
 
 const resendActivationCode = async (payload) => {
   const email = payload.email;
+
   const user = await Auth.isAuthExist(email);
   if (!user) throw new ApiError(status.BAD_REQUEST, "Email not found!");
 
-  const activationCode = createActivationToken().activationCode;
-  const activationCodeExpire = new Date(Date.now() + 3 * 60 * 1000);
+  const { code: activationCode, expiredAt: activationCodeExpire } =
+    codeGenerator(3);
   const data = {
     user: user.name,
     code: activationCode,
@@ -119,31 +92,23 @@ const resendActivationCode = async (payload) => {
   user.activationCodeExpire = activationCodeExpire;
   await user.save();
 
-  try {
-    sendEmail({
-      email: email,
-      subject: "New Activation Code",
-      html: otpResendTemp(data),
-    });
-  } catch (error) {
-    throw new ApiError(status.INTERNAL_SERVER_ERROR, "Email was not sent");
-  }
+  EmailHelpers.sendOtpResendEmail(email, data);
 };
 
 const activateAccount = async (payload) => {
   const { activationCode, email } = payload;
 
-  const existAuth = await Auth.findOne({ email: email });
-  if (!existAuth) throw new ApiError(status.NOT_FOUND, "User not found");
-  if (!existAuth.activationCode)
+  const auth = await Auth.findOne({ email });
+  if (!auth) throw new ApiError(status.NOT_FOUND, "User not found");
+  if (!auth.activationCode)
     throw new ApiError(
       status.NOT_FOUND,
       "Activation code not found. Get a new activation code"
     );
-  if (existAuth.activationCode !== activationCode)
+  if (auth.activationCode !== activationCode)
     throw new ApiError(status.BAD_REQUEST, "Code didn't match!");
 
-  const user = await Auth.findOneAndUpdate(
+  await Auth.updateOne(
     { email: email },
     { isActive: true },
     {
@@ -152,20 +117,20 @@ const activateAccount = async (payload) => {
     }
   );
 
-  let result = {};
-  if (existAuth.role === ENUM_USER_ROLE.USER) {
-    result = await User.findOne({ authId: existAuth._id });
-  } else if (existAuth.role === ENUM_USER_ROLE.ADMIN) {
-    result = await Admin.findOne({ authId: existAuth._id });
-  } else {
-    throw new ApiError(status.BAD_REQUEST, "Invalid role provided!");
+  let result;
+  switch (auth.role) {
+    case ENUM_USER_ROLE.ADMIN:
+      result = await Admin.findOne({ authId: auth._id }).lean();
+      break;
+    default:
+      result = await User.findOne({ authId: auth._id }).lean();
   }
 
   const tokenPayload = {
-    authId: existAuth._id,
+    authId: auth._id,
     userId: result._id,
-    email: existAuth.email,
-    role: existAuth.role,
+    email,
+    role: auth.role,
   };
 
   const accessToken = jwtHelpers.createToken(
@@ -182,51 +147,44 @@ const activateAccount = async (payload) => {
   return {
     accessToken,
     refreshToken,
-    user,
   };
 };
 
 const loginAccount = async (payload) => {
   const { email, password } = payload;
 
-  const isAuth = await Auth.isAuthExist(email);
-  if (!isAuth) throw new ApiError(status.NOT_FOUND, "User does not exist");
-  if (!isAuth.isActive)
+  const auth = await Auth.isAuthExist(email);
+
+  if (!auth) throw new ApiError(status.NOT_FOUND, "User does not exist");
+  if (!auth.isActive)
     throw new ApiError(
       status.BAD_REQUEST,
       "Please activate your account then try to login"
     );
-  if (isAuth.isBlocked)
+  if (auth.isBlocked)
     throw new ApiError(status.FORBIDDEN, "You are blocked. Contact support");
+
   if (
-    isAuth.password &&
-    !(await Auth.isPasswordMatched(password, isAuth.password))
+    auth.password &&
+    !(await Auth.isPasswordMatched(password, auth.password))
   ) {
     throw new ApiError(status.BAD_REQUEST, "Password is incorrect");
   }
 
   let result;
-  let role;
-  const { _id: authId } = isAuth;
-
-  switch (isAuth.role) {
-    case ENUM_USER_ROLE.USER:
-      result = await User.findOne({ authId: isAuth._id }).populate("authId");
-      role = ENUM_USER_ROLE.USER;
-      break;
+  switch (auth.role) {
     case ENUM_USER_ROLE.ADMIN:
-      result = await Admin.findOne({ authId: isAuth._id }).populate("authId");
-      role = ENUM_USER_ROLE.ADMIN;
+      result = await Admin.findOne({ authId: auth._id }).populate("authId");
       break;
     default:
-      throw new ApiError(status.BAD_REQUEST, "Invalid role provided!");
+      result = await User.findOne({ authId: auth._id }).populate("authId");
   }
 
   const tokenPayload = {
-    authId,
+    authId: auth._id,
     userId: result._id,
     email,
-    role,
+    role: auth.role,
   };
 
   const accessToken = jwtHelpers.createToken(
@@ -242,7 +200,6 @@ const loginAccount = async (payload) => {
   );
 
   return {
-    user: result,
     accessToken,
     refreshToken,
   };
@@ -254,10 +211,10 @@ const forgotPass = async (payload) => {
   if (!email) throw new ApiError(status.BAD_REQUEST, "Missing email");
 
   const user = await Auth.isAuthExist(email);
-  if (!user) throw new ApiError(status.BAD_REQUEST, "User does not found!");
+  if (!user) throw new ApiError(status.BAD_REQUEST, "User not found!");
 
-  const verificationCode = createActivationToken().activationCode;
-  const verificationCodeExpire = new Date(Date.now() + 15 * 60 * 1000);
+  const { code: verificationCode, expiredAt: verificationCodeExpire } =
+    codeGenerator(3);
 
   user.verificationCode = verificationCode;
   user.verificationCodeExpire = verificationCodeExpire;
@@ -271,15 +228,7 @@ const forgotPass = async (payload) => {
     ),
   };
 
-  try {
-    sendEmail({
-      email: payload.email,
-      subject: "Password Reset Code",
-      html: resetPassEmailTemp(data),
-    });
-  } catch (error) {
-    throw new ApiError(status.INTERNAL_SERVER_ERROR, error.message);
-  }
+  EmailHelpers.sendResetPasswordEmail(email, data);
 };
 
 const forgetPassOtpVerify = async (payload) => {
@@ -297,12 +246,10 @@ const forgetPassOtpVerify = async (payload) => {
   if (auth.verificationCode !== code)
     throw new ApiError(status.BAD_REQUEST, "Invalid verification code!");
 
-  const update = await Auth.findOneAndUpdate(
+  await Auth.updateOne(
     { email: auth.email },
     { isVerified: true, verificationCode: null }
   );
-
-  return update;
 };
 
 const resetPassword = async (payload) => {
@@ -316,12 +263,9 @@ const resetPassword = async (payload) => {
   if (!auth.isVerified)
     throw new ApiError(status.FORBIDDEN, "Please complete OTP verification");
 
-  const hashedPassword = await bcrypt.hash(
-    newPassword,
-    Number(config.bcrypt_salt_rounds)
-  );
+  const hashedPassword = await hashPass(newPassword);
 
-  const result = await Auth.updateOne(
+  await Auth.updateOne(
     { email },
     {
       $set: { password: hashedPassword },
@@ -332,13 +276,14 @@ const resetPassword = async (payload) => {
       },
     }
   );
-  return result;
 };
 
 const changePassword = async (userData, payload) => {
   const { email } = userData;
-
   const { oldPassword, newPassword, confirmPassword } = payload;
+
+  validateFields(payload, ["oldPassword", "newPassword", "confirmPassword"]);
+
   if (newPassword !== confirmPassword)
     throw new ApiError(
       status.BAD_REQUEST,
@@ -346,6 +291,7 @@ const changePassword = async (userData, payload) => {
     );
 
   const isUserExist = await Auth.isAuthExist(email);
+
   if (!isUserExist)
     throw new ApiError(status.NOT_FOUND, "Account does not exist!");
   if (
@@ -359,11 +305,12 @@ const changePassword = async (userData, payload) => {
   isUserExist.save();
 };
 
-// Unset activationCode activationCodeExpire field for expired activation code
-cron.schedule("* * * * *", async () => {
-  try {
-    const now = new Date();
-    const result = await Auth.updateMany(
+const updateFieldsWithCron = async (check) => {
+  const now = new Date();
+  let result;
+
+  if (check === "activation") {
+    result = await Auth.updateMany(
       {
         activationCodeExpire: { $lte: now },
       },
@@ -374,20 +321,10 @@ cron.schedule("* * * * *", async () => {
         },
       }
     );
-
-    if (result.modifiedCount > 0) {
-      logger.info(`Removed ${result.modifiedCount} expired activation code`);
-    }
-  } catch (error) {
-    logger.error("Error removing expired activation code:", error);
   }
-});
 
-// Unset isVerified, verificationCode, verificationCodeExpire field for expired verification code
-cron.schedule("* * * * *", async () => {
-  try {
-    const now = new Date();
-    const result = await Auth.updateMany(
+  if (check === "verification") {
+    result = await Auth.updateMany(
       {
         verificationCodeExpire: { $lte: now },
       },
@@ -399,12 +336,28 @@ cron.schedule("* * * * *", async () => {
         },
       }
     );
+  }
 
-    if (result.modifiedCount > 0) {
-      logger.info(`Removed ${result.modifiedCount} expired verification code`);
-    }
+  if (result.modifiedCount > 0)
+    logger.info(
+      `Removed ${result.modifiedCount} expired ${
+        check === "activation" ? "activation" : "verification"
+      } code`
+    );
+};
+
+const hashPass = async (newPassword) => {
+  return await bcrypt.hash(newPassword, Number(config.bcrypt_salt_rounds));
+};
+
+// Unset activationCode activationCodeExpire field for expired activation code
+// Unset isVerified, verificationCode, verificationCodeExpire field for expired verification code
+cron.schedule("* * * * *", async () => {
+  try {
+    updateFieldsWithCron("activation");
+    updateFieldsWithCron("verification");
   } catch (error) {
-    logger.error("Error removing expired verification code:", error);
+    logger.error("Error removing expired code:", error);
   }
 });
 

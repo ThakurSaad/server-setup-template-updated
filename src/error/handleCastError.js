@@ -1,11 +1,13 @@
 const handleCastError = (error) => {
-  const errors = [{ path: error.path, message: "Invalid Id" }];
+  const errorMessage = {
+    path: error.path,
+    message: "Invalid Id",
+  };
 
-  const statusCode = 400;
   return {
-    statusCode,
+    statusCode: 400,
     message: "CastError -> Please Provide Valid ObjectID",
-    errorMessages: errors,
+    errorMessages: [errorMessage],
   };
 };
 

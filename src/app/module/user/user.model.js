@@ -20,11 +20,10 @@ const UserSchema = new Schema(
     profile_image: {
       type: String,
     },
-    phone_number: {
+    phoneNumber: {
       type: String,
-      required: true,
     },
-    date_of_birth: {
+    dateOfBirth: {
       type: String,
     },
     address: {
