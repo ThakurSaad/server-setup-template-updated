@@ -52,7 +52,6 @@ const AuthSchema = new Schema(
     },
     activationCodeExpire: {
       type: Date,
-      default: () => Date.now() + 2 * 60 * 1000,
     },
   },
   {
@@ -79,7 +78,8 @@ AuthSchema.statics.isPasswordMatched = async function (
   givenPassword,
   savedPassword
 ) {
-  return await bcrypt.compare(givenPassword, savedPassword);
+  const result = await bcrypt.compare(givenPassword, savedPassword);
+  return result;
 };
 
 AuthSchema.pre("save", async function (next) {

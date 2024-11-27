@@ -4,17 +4,21 @@ const catchAsync = require("../../../shared/catchasync");
 const config = require("../../../config");
 
 const registrationAccount = catchAsync(async (req, res) => {
-  const { role } = await AuthService.registrationAccount(req.body);
-  const message =
-    role === "USER"
-      ? "Please check your email for the activation OTP code."
-      : "Registration Successful";
+  const result = await AuthService.registrationAccount(req.body);
 
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message,
-    data: role,
+    message: result.message || "Something went wrong",
+  });
+});
+
+const resendActivationCode = catchAsync(async (req, res) => {
+  await AuthService.resendActivationCode(req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Resent successfully",
   });
 });
 
@@ -77,15 +81,6 @@ const forgetPassOtpVerify = catchAsync(async (req, res) => {
     success: true,
     message: "Code verified successfully",
     data: result,
-  });
-});
-
-const resendActivationCode = catchAsync(async (req, res) => {
-  await AuthService.resendActivationCode(req.body);
-  sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: "Resent successfully",
   });
 });
 
