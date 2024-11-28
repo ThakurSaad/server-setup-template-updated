@@ -5,8 +5,8 @@ const allowedMimeTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
 
 const isValidFileType = (mimetype) => allowedMimeTypes.includes(mimetype);
 
-const createDirIfNotExists = (dirPath) => {
-  if (!fs.existsSync(dirPath)) fs.mkdir(dirPath, { recursive: true });
+const createDirIfNotExists = (uploadPath) => {
+  if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath, { recursive: true });
 };
 
 const uploadFile = () => {
@@ -14,11 +14,9 @@ const uploadFile = () => {
     destination: function (req, file, cb) {
       let uploadPath = "";
 
-      if (file.fieldname === "profile_image") {
+      if (file.fieldname === "profile_image")
         uploadPath = "uploads/images/profile";
-      } else {
-        uploadPath = "uploads";
-      }
+      else uploadPath = "uploads";
 
       createDirIfNotExists(uploadPath);
 

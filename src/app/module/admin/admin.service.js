@@ -6,18 +6,14 @@ const Admin = require("./admin.model");
 const updateProfile = async (req) => {
   const { files, body: data } = req;
   const { userId, authId } = req.user;
-
-  if (!Object.keys(data).length)
-    throw new ApiError(
-      status.BAD_REQUEST,
-      "Data is missing in the request body!"
-    );
-
-  let profile_image;
-  if (files && files.profile_image)
-    profile_image = `/${files.profile_image[0].path}`;
-
   const updatedData = { ...data };
+
+  if (data?.profile_image === "")
+    throw new ApiError(status.BAD_REQUEST, `Missing profile image`);
+
+  if (files && files.profile_image)
+    updatedData.profile_image = files.profile_image[0].path;
+
   const [auth, admin] = await Promise.all([
     Auth.findByIdAndUpdate(
       authId,
@@ -28,7 +24,7 @@ const updateProfile = async (req) => {
     ),
     Admin.findByIdAndUpdate(
       userId,
-      { profile_image, ...updatedData },
+      { ...updatedData },
       {
         new: true,
       }
