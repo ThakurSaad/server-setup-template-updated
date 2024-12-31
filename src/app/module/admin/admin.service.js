@@ -1,7 +1,7 @@
 const { default: status } = require("http-status");
 const ApiError = require("../../../error/ApiError");
-const Auth = require("../auth/auth.model");
-const Admin = require("./admin.model");
+const Auth = require("../auth/Auth");
+const Admin = require("./Admin");
 
 const updateProfile = async (req) => {
   const { files, body: data } = req;

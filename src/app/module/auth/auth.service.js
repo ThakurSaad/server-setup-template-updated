@@ -7,10 +7,10 @@ const config = require("../../../config");
 const { jwtHelpers } = require("../../../helper/jwtHelpers");
 const { ENUM_USER_ROLE } = require("../../../util/enum");
 const { logger } = require("../../../shared/logger");
-const Auth = require("./auth.model");
+const Auth = require("./Auth");
 const codeGenerator = require("../../../util/codeGenerator");
-const User = require("../user/user.model");
-const Admin = require("../admin/admin.model");
+const User = require("../user/User");
+const Admin = require("../admin/Admin");
 const validateFields = require("../../../util/validateFields");
 const EmailHelpers = require("../../../util/emailHelpers");
 

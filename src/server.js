@@ -11,27 +11,23 @@ async function main() {
     const port =
       typeof config.port === "number" ? config.port : Number(config.port);
 
-    const server = app.listen(port, config.base_url, () => {
+    app.listen(port, config.base_url, () => {
       logger.info(`App listening on http://${config.base_url}:${config.port}`);
     });
 
     process.on("unhandledRejection", (error) => {
-      logger.error("Unhandled Rejection:", error);
-      process.exit(1);
+      errorLogger.error("Unhandled Rejection:", error);
     });
 
     process.on("uncaughtException", (error) => {
       errorLogger.error("Uncaught Exception:", error);
-      process.exit(1);
     });
 
     process.on("SIGTERM", () => {
       logger.info("SIGTERM received");
-      server.close(() => process.exit(0));
     });
   } catch (err) {
     errorLogger.error("Main Function Error:", err);
-    process.exit(1);
   }
 }
 

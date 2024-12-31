@@ -3,7 +3,7 @@ const ApiError = require("../../error/ApiError");
 const httpStatus = require("http-status");
 const { jwtHelpers } = require("../../helper/jwtHelpers");
 const { ENUM_USER_ROLE } = require("../../util/enum");
-const Auth = require("../module/auth/auth.model");
+const Auth = require("../module/auth/Auth");
 
 const auth =
   (...roles) =>

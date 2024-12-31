@@ -5,7 +5,7 @@ const {
   AboutUs,
   FAQ,
   ContactUs,
-} = require("../manage/manage.model");
+} = require("./Manage");
 const ApiError = require("../../../error/ApiError");
 
 const addTermsConditions = async (payload) => {
