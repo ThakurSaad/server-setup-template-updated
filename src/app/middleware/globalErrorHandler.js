@@ -11,6 +11,7 @@ const createErrorMessage = require("../../util/createErrorMessage");
 const globalErrorHandler = (error, req, res, next) => {
   const logError = config.env === "development" ? console.log : console.error;
   logError("globalErrorHandler", error);
+  errorLogger.error(error.message);
 
   // Default values
   let statusCode = error?.statusCode || 500;
