@@ -1,7 +1,7 @@
 const auth = require("../../middleware/auth");
 const express = require("express");
-const { ENUM_USER_ROLE } = require("../../../util/enum");
 const DashboardController = require("./dashboard.controller");
+const config = require("../../../config");
 
 const router = express.Router();
 
@@ -10,9 +10,9 @@ router
   // overview ========================
   .get(
     "/total-overview",
-    auth(ENUM_USER_ROLE.ADMIN),
+    auth(config.auth_level.admin),
     DashboardController.totalOverview
   )
-  .get("/revenue", auth(ENUM_USER_ROLE.ADMIN), DashboardController.revenue);
+  .get("/revenue", auth(config.auth_level.admin), DashboardController.revenue);
 
 module.exports = router;

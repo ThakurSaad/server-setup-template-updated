@@ -6,10 +6,12 @@ const { ENUM_USER_ROLE } = require("../../util/enum");
 const Auth = require("../module/auth/Auth");
 
 const auth =
-  (...roles) =>
+  (roles, isAccessible = true) =>
   async (req, res, next) => {
     try {
       const tokenWithBearer = req.headers.authorization;
+
+      if (!tokenWithBearer && isAccessible) return next();
 
       if (!tokenWithBearer)
         throw new ApiError(

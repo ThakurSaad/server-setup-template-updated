@@ -1,7 +1,7 @@
 const express = require("express");
 const auth = require("../../middleware/auth");
-const { ENUM_USER_ROLE } = require("../../../util/enum");
 const { AuthController } = require("../auth/auth.controller");
+const config = require("../../../config");
 
 const router = express.Router();
 
@@ -15,7 +15,7 @@ router
   .post("/reset-password", AuthController.resetPassword)
   .patch(
     "/change-password",
-    auth(ENUM_USER_ROLE.USER, ENUM_USER_ROLE.ADMIN),
+    auth(config.auth_level.user),
     AuthController.changePassword
   );
 

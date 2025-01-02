@@ -20,6 +20,11 @@ const config = {
   base_url: process.env.BASE_URL,
   database_url: process.env.MONGO_URL,
   database_password: process.env.DB_PASSWORD,
+  auth_level: {
+    user: ["USER", "ADMIN", "SUPER_ADMIN"],
+    admin: ["ADMIN", "SUPER_ADMIN"],
+    super_admin: ["SUPER_ADMIN"],
+  },
   jwt: {
     secret: process.env.JWT_SECRET,
     refresh_secret: process.env.JWT_REFRESH_SECRET,
