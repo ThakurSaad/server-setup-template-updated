@@ -2,12 +2,13 @@ const express = require("express");
 const auth = require("../../middleware/auth");
 const { AuthController } = require("../auth/auth.controller");
 const config = require("../../../config");
+const limiter = require("../../middleware/limiter");
 
 const router = express.Router();
 
 router
   .post("/register", AuthController.registrationAccount)
-  .post("/login", AuthController.loginAccount)
+  .post("/login", limiter, AuthController.loginAccount)
   .post("/activate-account", AuthController.activateAccount)
   .post("/activation-code-resend", AuthController.resendActivationCode)
   .post("/forgot-password", AuthController.forgotPass)
