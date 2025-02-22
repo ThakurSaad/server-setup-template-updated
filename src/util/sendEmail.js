@@ -14,7 +14,7 @@ const sendEmail = async (options) => {
     host: config.smtp.smtp_host,
     service: config.smtp.smtp_service,
     port: parseInt(config.smtp.smtp_port),
-    // secure: true,
+    secure: false, // true for port 465, false for other ports
     auth: {
       user: config.smtp.smtp_mail,
       pass: config.smtp.smtp_password,
