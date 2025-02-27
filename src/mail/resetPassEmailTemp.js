@@ -65,10 +65,10 @@ const resetPassEmailTemp = (data) => `
           data.verificationCodeExpire
         } minutes</strong> and can only be used once. If you attempt to reset your password again, you will need a new code.</p>
         <p>If you did not request a password reset, please disregard this email or contact support.</p>
-        <p>Thank you,<br>The TrackTrek Team</p>
+        <p>Thank you,<br>The Selling Point Team</p>
       </div>
       <div class="footer">
-        <p>&copy; ${new Date().getFullYear()} TrackTrek - All Rights Reserved.</p>
+        <p>&copy; ${new Date().getFullYear()} Selling Point - All Rights Reserved.</p>
         <p><a href="https://yourwebsite.com/privacy">Privacy Policy</a> | <a href="https://yourwebsite.com/contact">Contact Support</a></p>
       </div>
     </body>

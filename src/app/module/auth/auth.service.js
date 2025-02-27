@@ -5,7 +5,7 @@ const { status } = require("http-status");
 const ApiError = require("../../../error/ApiError");
 const config = require("../../../config");
 const { jwtHelpers } = require("../../../helper/jwtHelpers");
-const { ENUM_USER_ROLE } = require("../../../util/enum");
+const { EnumUserRole } = require("../../../util/enum");
 const { logger } = require("../../../shared/logger");
 const Auth = require("./Auth");
 const codeGenerator = require("../../../util/codeGenerator");
@@ -25,7 +25,7 @@ const registrationAccount = async (payload) => {
     "name",
   ]);
 
-  if (!Object.values(ENUM_USER_ROLE).includes(role))
+  if (!Object.values(EnumUserRole).includes(role))
     throw new ApiError(status.BAD_REQUEST, "Invalid role");
   if (password !== confirmPassword)
     throw new ApiError(
@@ -57,7 +57,7 @@ const registrationAccount = async (payload) => {
     ),
   };
 
-  if (role !== ENUM_USER_ROLE.ADMIN)
+  if (role !== EnumUserRole.ADMIN)
     EmailHelpers.sendActivationEmail(email, data);
 
   const auth = await Auth.create(authData);
@@ -68,7 +68,7 @@ const registrationAccount = async (payload) => {
     email,
   };
 
-  if (role === ENUM_USER_ROLE.ADMIN) await Admin.create(userData);
+  if (role === EnumUserRole.ADMIN) await Admin.create(userData);
   else await User.create(userData);
 
   return { message: "Account created successfully. Please check your email" };
@@ -119,7 +119,7 @@ const activateAccount = async (payload) => {
 
   let result;
   switch (auth.role) {
-    case ENUM_USER_ROLE.ADMIN:
+    case EnumUserRole.ADMIN:
       result = await Admin.findOne({ authId: auth._id }).lean();
       break;
     default:
@@ -173,7 +173,7 @@ const loginAccount = async (payload) => {
 
   let result;
   switch (auth.role) {
-    case ENUM_USER_ROLE.ADMIN:
+    case EnumUserRole.ADMIN:
       result = await Admin.findOne({ authId: auth._id }).populate("authId");
       break;
     default:
