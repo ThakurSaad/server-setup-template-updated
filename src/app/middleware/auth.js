@@ -2,7 +2,7 @@ const config = require("../../config");
 const ApiError = require("../../error/ApiError");
 const httpStatus = require("http-status");
 const { jwtHelpers } = require("../../helper/jwtHelpers");
-const { ENUM_USER_ROLE } = require("../../util/enum");
+const { EnumUserRole } = require("../../util/enum");
 const Auth = require("../module/auth/Auth");
 
 const auth =
@@ -29,7 +29,7 @@ const auth =
         const isExist = await Auth.findById(verifyUser?.authId);
         if (
           verifyUser.role ===
-            Object.values(ENUM_USER_ROLE).includes(verifyUser.role) &&
+            Object.values(EnumUserRole).includes(verifyUser.role) &&
           !isExist
         ) {
           throw new ApiError(httpStatus.UNAUTHORIZED, "You are not authorized");

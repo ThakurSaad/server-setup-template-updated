@@ -22,7 +22,7 @@ app.use("/uploads", express.static("uploads"));
 app.use("/", routes);
 
 app.get("/", async (req, res) => {
-  res.json("Welcome to TrackTrek");
+  res.json("Welcome to Selling Point");
 });
 
 app.use(globalErrorHandler);
