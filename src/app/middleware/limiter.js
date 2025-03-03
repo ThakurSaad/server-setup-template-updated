@@ -1,5 +1,5 @@
 const rateLimit = require("express-rate-limit");
-const sendResponse = require("../../shared/sendResponse");
+const sendResponse = require("../../util/sendResponse");
 
 const limiter = rateLimit({
   windowMs: 60 * 60 * 1000,

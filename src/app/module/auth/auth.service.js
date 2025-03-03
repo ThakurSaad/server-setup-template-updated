@@ -4,9 +4,9 @@ const { status } = require("http-status");
 
 const ApiError = require("../../../error/ApiError");
 const config = require("../../../config");
-const { jwtHelpers } = require("../../../helper/jwtHelpers");
+const { jwtHelpers } = require("../../../util/jwtHelpers");
 const { EnumUserRole } = require("../../../util/enum");
-const { logger } = require("../../../shared/logger");
+const { logger } = require("../../../util/logger");
 const Auth = require("./Auth");
 const codeGenerator = require("../../../util/codeGenerator");
 const User = require("../user/User");
