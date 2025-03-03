@@ -1,6 +1,6 @@
 const { AuthService } = require("./auth.service");
-const sendResponse = require("../../../shared/sendResponse");
-const catchAsync = require("../../../shared/catchasync");
+const sendResponse = require("../../../util/sendResponse");
+const catchAsync = require("../../../util/catchAsync");
 const config = require("../../../config");
 
 const registrationAccount = catchAsync(async (req, res) => {

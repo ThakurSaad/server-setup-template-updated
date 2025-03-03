@@ -1,5 +1,5 @@
-const catchAsync = require("../../../shared/catchasync");
-const sendResponse = require("../../../shared/sendResponse");
+const catchAsync = require("../../../util/catchAsync");
+const sendResponse = require("../../../util/sendResponse");
 const ManageService = require("./manage.service");
 
 const addTermsConditions = catchAsync(async (req, res) => {

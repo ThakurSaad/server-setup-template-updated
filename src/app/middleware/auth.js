@@ -1,7 +1,7 @@
 const config = require("../../config");
 const ApiError = require("../../error/ApiError");
 const httpStatus = require("http-status");
-const { jwtHelpers } = require("../../helper/jwtHelpers");
+const { jwtHelpers } = require("../../util/jwtHelpers");
 const { EnumUserRole } = require("../../util/enum");
 const Auth = require("../module/auth/Auth");
 

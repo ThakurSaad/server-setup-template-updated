@@ -1,4 +1,4 @@
-const { errorLogger, logger } = require("./shared/logger");
+const { errorLogger, logger } = require("./util/logger");
 const connectDB = require("./connection/connectDB");
 const config = require("./config");
 const app = require("./app");

@@ -1,6 +1,6 @@
 const { UserService } = require("./user.service");
-const sendResponse = require("../../../shared/sendResponse");
-const catchAsync = require("../../../shared/catchasync");
+const sendResponse = require("../../../util/sendResponse");
+const catchAsync = require("../../../util/catchAsync");
 
 const updateProfile = catchAsync(async (req, res) => {
   const result = await UserService.updateProfile(req);

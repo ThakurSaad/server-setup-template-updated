@@ -7,7 +7,7 @@ const { JsonWebTokenError, TokenExpiredError } = require("jsonwebtoken");
 const { MulterError } = require("multer");
 const handleMulterError = require("../../error/handleMulterError");
 const createErrorMessage = require("../../util/createErrorMessage");
-const { errorLogger } = require("../../shared/logger");
+const { errorLogger } = require("../../util/logger");
 
 const globalErrorHandler = (error, req, res, next) => {
   const logError = config.env === "development" ? console.log : console.error;
