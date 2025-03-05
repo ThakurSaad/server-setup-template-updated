@@ -25,20 +25,6 @@ const registrationAccount = async (payload) => {
     "name",
   ]);
 
-  if (!Object.values(EnumUserRole).includes(role))
-    throw new ApiError(status.BAD_REQUEST, "Invalid role");
-  if (password !== confirmPassword)
-    throw new ApiError(
-      status.BAD_REQUEST,
-      "Password and Confirm Password didn't match"
-    );
-
-  const existingAuth = await Auth.findOne({ email }).lean();
-  if (existingAuth?.isActive)
-    throw new ApiError(status.BAD_REQUEST, "Email already exists");
-  if (existingAuth && !existingAuth.isActive)
-    return { message: "Already have an account. Please activate" };
-
   const { code: activationCode, expiredAt: activationCodeExpire } =
     codeGenerator(3);
   const authData = {
@@ -57,6 +43,34 @@ const registrationAccount = async (payload) => {
     ),
   };
 
+  if (!Object.values(EnumUserRole).includes(role))
+    throw new ApiError(status.BAD_REQUEST, "Invalid role");
+  if (password !== confirmPassword)
+    throw new ApiError(
+      status.BAD_REQUEST,
+      "Password and Confirm Password didn't match"
+    );
+
+  const user = await Auth.findOne({ email });
+  if (user) {
+    const message = user.isActive
+      ? "Account active. Please Login"
+      : "Already have an account. Please activate";
+
+    if (!user.isActive) {
+      user.activationCode = activationCode;
+      user.activationCodeExpire = activationCodeExpire;
+      await user.save();
+
+      EmailHelpers.sendOtpResendEmail(email, data);
+    }
+
+    return {
+      isActive: user.isActive,
+      message,
+    };
+  }
+
   if (role !== EnumUserRole.ADMIN)
     EmailHelpers.sendActivationEmail(email, data);
 
@@ -71,7 +85,10 @@ const registrationAccount = async (payload) => {
   if (role === EnumUserRole.ADMIN) await Admin.create(userData);
   else await User.create(userData);
 
-  return { message: "Account created successfully. Please check your email" };
+  return {
+    isActive: false,
+    message: "Account created successfully. Please check your email",
+  };
 };
 
 const resendActivationCode = async (payload) => {

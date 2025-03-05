@@ -6,10 +6,14 @@ const config = require("../../../config");
 const registrationAccount = catchAsync(async (req, res) => {
   const result = await AuthService.registrationAccount(req.body);
 
+  const isSuccess =
+    result.message === "Account created successfully. Please check your email";
+
   sendResponse(res, {
-    statusCode: 200,
-    success: true,
+    statusCode: isSuccess ? 200 : 400,
+    success: isSuccess,
     message: result.message || "Something went wrong",
+    data: result,
   });
 });
 

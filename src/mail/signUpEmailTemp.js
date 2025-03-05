@@ -3,12 +3,14 @@ const signUpEmailTemp = (data) => `
     <head>
       <style>
         body {
+          font-family: 'Verdana', 'Arial', sans-serif;        
           font-family: Arial, sans-serif;
           background-color: #f2f3f8;
           margin: 0;
           padding: 0;
         }
         .container {
+          font-family: 'Verdana', 'Arial', sans-serif;        
           max-width: 600px;
           margin: 40px auto;
           background-color: #ffffff;
@@ -17,7 +19,7 @@ const signUpEmailTemp = (data) => `
           box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
         }
         h1 {
-          color: #1a73e8;
+          color: #0F5E5B;
           font-size: 26px;
           margin-bottom: 20px;
           font-weight: bold;
@@ -29,13 +31,20 @@ const signUpEmailTemp = (data) => `
           font-size: 16px;
           margin-bottom: 20px;
         }
+        .logo {
+          text-align: center;
+        }
+        .logo-img {
+          max-width: 100%;
+          margin-bottom: 20px;
+        }
         .code {
-          display: inline-block;
+          text-align: center;
           background-color: #e8f0fe;
           padding: 14px 24px;
           font-size: 20px;
           font-weight: bold;
-          color: #1a73e8;
+          color: #0F5E5B;
           border-radius: 6px;
           letter-spacing: 2px;
           margin: 20px 0;
@@ -50,13 +59,16 @@ const signUpEmailTemp = (data) => `
           margin: 5px 0;
         }
         a {
-          color: #1a73e8;
+          color: #0F5E5B;
           text-decoration: none;
         }
       </style>
     </head>
     <body>
       <div class="container">
+        <div class="logo">
+          <img src="${process.env.EMAIL_TEMP_IMAGE}" alt="Logo" class="logo-img" />
+        </div>
         <h1>Welcome to Selling Point</h1>
         <p>Hello, ${data.user}</p>
         <p>Thank you for registering with Selling Point. To activate your account, please use the following activation code:</p>
@@ -67,7 +79,10 @@ const signUpEmailTemp = (data) => `
       </div>
       <div class="footer">
         <p>&copy; Selling Point - All Rights Reserved.</p>
-        <p><a href="https://yourwebsite.com/privacy">Privacy Policy</a> | <a href="https://yourwebsite.com/contact">Contact Support</a></p>
+        <p>
+          <a href="https://yourwebsite.com/privacy">Privacy Policy</a> |
+          <a href="https://yourwebsite.com/contact">Contact Support</a>
+        </p>
       </div>
     </body>
   </html>
