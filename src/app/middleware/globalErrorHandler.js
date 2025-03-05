@@ -11,7 +11,7 @@ const { errorLogger } = require("../../util/logger");
 
 const globalErrorHandler = (error, req, res, next) => {
   const logError = config.env === "development" ? console.log : console.error;
-  logError("globalErrorHandler", error);
+  logError("❌ globalErrorHandler", error);
   errorLogger.error(error.message);
 
   // Default values
