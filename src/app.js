@@ -4,16 +4,11 @@ const globalErrorHandler = require("./app/middleware/globalErrorHandler");
 const routes = require("./app/routes");
 const NotFoundHandler = require("./error/NotFoundHandler");
 const cookieParser = require("cookie-parser");
+const corsOptions = require("./util/corsOptions");
 
 const app = express();
 
-app.use(
-  cors({
-    origin: [],
-    credentials: true,
-  })
-);
-
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
