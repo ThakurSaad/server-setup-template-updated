@@ -52,6 +52,11 @@ const config = {
   stripe: {
     stripe_secret_key: process.env.STRIPE_SECRET_KEY,
   },
+  variables: {
+    email_temp_image: process.env.EMAIL_TEMP_IMAGE,
+    email_temp_text_secondary_color:
+      process.env.EMAIL_TEMP_TEXT_SECONDARY_COLOR,
+  },
 };
 
 // Validate configuration

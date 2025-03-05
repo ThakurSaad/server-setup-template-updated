@@ -3,12 +3,14 @@ const resetPassEmailTemp = (data) => `
     <head>
       <style>
         body {
+          font-family: 'Verdana', 'Arial', sans-serif;
           font-family: Arial, sans-serif;
           background-color: #f2f3f8;
           margin: 0;
           padding: 0;
         }
         .container {
+          font-family: 'Verdana', 'Arial', sans-serif;      
           max-width: 600px;
           margin: 40px auto;
           background-color: #ffffff;
@@ -16,9 +18,9 @@ const resetPassEmailTemp = (data) => `
           border-radius: 10px;
           box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
         }
-        .header {
+        h1 {
           text-align: center;
-          color: #1a73e8;
+          color: #0F5E5B;
           font-size: 26px;
           font-weight: bold;
           margin-bottom: 20px;
@@ -29,13 +31,20 @@ const resetPassEmailTemp = (data) => `
           font-size: 16px;
           margin-bottom: 20px;
         }
+        .logo {
+          text-align: center;
+        }
+        .logo-img {
+          max-width: 100%;
+          margin-bottom: 20px;
+        }
         .code {
-          display: inline-block;
+          text-align: center;
           background-color: #e8f0fe;
           padding: 14px 24px;
           font-size: 20px;
           font-weight: bold;
-          color: #1a73e8;
+          color: #0F5E5B;
           border-radius: 6px;
           letter-spacing: 2px;
           margin: 20px 0;
@@ -50,26 +59,41 @@ const resetPassEmailTemp = (data) => `
           margin: 5px 0;
         }
         a {
-          color: #1a73e8;
+          color: #0F5E5B;
           text-decoration: none;
         }
       </style>
     </head>
     <body>
       <div class="container">
-        <div class="header">Password Reset Request</div>
+        <div class="logo">
+          <img src="${
+            process.env.EMAIL_TEMP_IMAGE
+          }" alt="Logo" class="logo-img" />
+        </div>
+        <h1>Password Reset Request</h1>
         <p>Hello, ${data.name}</p>
-        <p>We have received a request to reset your password. Please use the code below to proceed with resetting your password:</p>
+        <p>
+          We have received a request to reset your password. Please use the code below to proceed with resetting your password:
+        </p>
         <div class="code">${data.verificationCode}</div>
-        <p>This code will be valid for the next <strong>${
-          data.verificationCodeExpire
-        } minutes</strong> and can only be used once. If you attempt to reset your password again, you will need a new code.</p>
-        <p>If you did not request a password reset, please disregard this email or contact support.</p>
+        <p>
+          This code will be valid for the next <strong>${
+            data.verificationCodeExpire
+          } minutes</strong> and can only be used once.
+          If you attempt to reset your password again, you will need a new code.
+        </p>
+        <p>
+          If you did not request a password reset, please disregard this email or contact support.
+        </p>
         <p>Thank you,<br>The Selling Point Team</p>
       </div>
       <div class="footer">
         <p>&copy; ${new Date().getFullYear()} Selling Point - All Rights Reserved.</p>
-        <p><a href="https://yourwebsite.com/privacy">Privacy Policy</a> | <a href="https://yourwebsite.com/contact">Contact Support</a></p>
+        <p>
+          <a href="https://yourwebsite.com/privacy">Privacy Policy</a> |
+          <a href="https://yourwebsite.com/contact">Contact Support</a>
+        </p>
       </div>
     </body>
   </html>
