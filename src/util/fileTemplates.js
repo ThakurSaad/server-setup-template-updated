@@ -154,14 +154,14 @@ const serviceTemplate = (moduleName) => {
         .paginate()
         .fields();
 
-        const [category, meta] = await Promise.all([
+        const [${moduleNameLowerCase}, meta] = await Promise.all([
         ${moduleNameLowerCase}Query.modelQuery,
         ${moduleNameLowerCase}Query.countTotal(),
         ]);
 
         return {
         meta,
-        ${moduleName}s,
+        ${moduleNameLowerCase}s,
         };
     };
 

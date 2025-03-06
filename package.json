@@ -9,7 +9,8 @@
     "lint:fix": "eslint . --fix",
     "prettier:fix": "prettier --write .",
     "prettier:check": "prettier --ignore-path .gitignore --check \"**/*.+(js|json)\"",
-    "lint-prettier": "yarn lint:check && yarn prettier:check"
+    "lint-prettier": "yarn lint:check && yarn prettier:check",
+    "make:file": "node src/util/generateModule.js"
   },
   "lint-staged": {
     "src/**/*.js": "yarn lint-prettier"
