@@ -14,7 +14,7 @@ const generateModule = (moduleName) => {
   // Check if the directory exists
   if (!fs.existsSync(dirPath)) {
     // Create the module directory
-    fs.mkdirSync(dirPath, { recursive: true });
+    fs.mkdirSync(dirPath.toLowerCase(), { recursive: true });
 
     // model
     fs.writeFileSync(
@@ -47,5 +47,5 @@ const generateModule = (moduleName) => {
 };
 
 // Specify the module name
-const moduleName = "Test";
+const moduleName = "Notification";
 generateModule(moduleName);
