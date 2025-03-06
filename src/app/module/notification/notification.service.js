@@ -7,11 +7,15 @@ const { EnumUserRole } = require("../../../util/enum");
 const AdminNotification = require("./AdminNotification");
 
 const getNotification = async (userData, query) => {
-  validateFields(query, ["notificationId"]);
+  const { role } = userData;
+  const Model = role === EnumUserRole.ADMIN ? AdminNotification : Notification;
 
-  const notification = await Notification.findOne({
-    _id: query.notificationId,
-  }).lean();
+  if (role !== EnumUserRole.ADMIN) validateFields(query, ["notificationId"]);
+
+  const queryObj =
+    role === EnumUserRole.ADMIN ? {} : { _id: query.notificationId };
+
+  const notification = await Model.findOne(queryObj).lean();
 
   if (!notification)
     throw new ApiError(status.NOT_FOUND, "Notification not found");
@@ -37,14 +41,14 @@ const getAllNotifications = async (userData, query) => {
     .paginate()
     .fields();
 
-  const [category, meta] = await Promise.all([
+  const [notification, meta] = await Promise.all([
     notificationQuery.modelQuery,
     notificationQuery.countTotal(),
   ]);
 
   return {
     meta,
-    category,
+    notification,
   };
 };
 

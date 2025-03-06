@@ -1,6 +1,6 @@
-const AdminNotification = require("../app/module/notification/adminNotification.model");
-const Notification = require("../app/module/notification/notification.model");
-const catchAsync = require("../shared/catchAsync");
+const AdminNotification = require("../app/module/notification/AdminNotification");
+const Notification = require("../app/module/notification/Notification");
+const catchAsync = require("../util/catchAsync");
 
 const postNotification = catchAsync(async (title, message, toId = null) => {
   if (!title || !message)
