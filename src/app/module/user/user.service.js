@@ -3,6 +3,7 @@ const { status } = require("http-status");
 const ApiError = require("../../../error/ApiError");
 const User = require("./User");
 const Auth = require("../auth/Auth");
+const unlinkFile = require("../../../util/unlinkFile");
 
 const updateProfile = async (req) => {
   const { files, body: data } = req;
@@ -14,6 +15,10 @@ const updateProfile = async (req) => {
 
   if (files && files.profile_image)
     updateData.profile_image = files.profile_image[0].path;
+
+  const existingUser = await User.findById(userId).lean();
+
+  unlinkFile(existingUser.profile_image);
 
   const [auth, user] = await Promise.all([
     Auth.findByIdAndUpdate(

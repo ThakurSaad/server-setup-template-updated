@@ -5,6 +5,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
+    "memory-usage": "node --trace_gc src/server.js",
     "lint:check": "eslint --ignore-path .eslintignore --ext .js .",
     "lint:fix": "eslint . --fix",
     "prettier:fix": "prettier --write .",
