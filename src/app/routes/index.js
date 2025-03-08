@@ -7,6 +7,7 @@ const DashboardRoutes = require("../module/dashboard/dashboard.routes");
 const ManageRoutes = require("../module/manage/manage.routes");
 const NotificationRoutes = require("../module/notification/notification.routes");
 const FeedbackRoutes = require("../module/feedback/feedback.routes");
+const ReviewRoutes = require("../module/review/review.routes");
 
 const moduleRoutes = [
   {
@@ -36,6 +37,10 @@ const moduleRoutes = [
   {
     path: "/feedback",
     route: FeedbackRoutes,
+  },
+  {
+    path: "/review",
+    route: ReviewRoutes,
   },
 ];
 

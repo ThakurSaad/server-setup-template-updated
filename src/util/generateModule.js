@@ -47,5 +47,5 @@ const generateModule = (moduleName) => {
 };
 
 // Specify the module name
-const moduleName = "Notification";
+const moduleName = "Test";
 generateModule(moduleName);

@@ -94,7 +94,7 @@ const controllerTemplate = (moduleName) => {
 
 // Template for routes file
 const routesTemplate = (moduleName) => {
-  const moduleNameLowerCase = moduleNameLowerCase;
+  const moduleNameLowerCase = moduleName.toLowerCase();
 
   return `
     const express = require("express");
@@ -117,7 +117,7 @@ const routesTemplate = (moduleName) => {
 
 // Template for service file
 const serviceTemplate = (moduleName) => {
-  const moduleNameLowerCase = moduleNameLowerCase;
+  const moduleNameLowerCase = moduleName.toLowerCase();
 
   return `
     const { default: status } = require("http-status");  
