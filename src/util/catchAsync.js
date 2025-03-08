@@ -5,7 +5,7 @@ const catchAsync = (fn) => {
     } catch (error) {
       console.log(error);
       next(error);
-    }
+    } 
   };
 };
 
