@@ -19,7 +19,6 @@ const config = {
   port: process.env.PORT,
   base_url: process.env.BASE_URL,
   database_url: process.env.MONGO_URL,
-  database_password: process.env.DB_PASSWORD,
   auth_level: {
     user: ["USER", "ADMIN", "SUPER_ADMIN"],
     admin: ["ADMIN", "SUPER_ADMIN"],
@@ -43,11 +42,7 @@ const config = {
     cloud_name: process.env.CLOUD_NAME,
     api_key: process.env.API_KEY,
     api_secret: process.env.API_SECRET,
-    couldinary_url: process.env.CLOUDINARY_URL,
-  },
-  sendgrid: {
-    from_email: process.env.FORM_EMAIL,
-    api_key: process.env.SEND_GRIDAPI_KEY,
+    cloudinary_url: process.env.CLOUDINARY_URL,
   },
   stripe: {
     stripe_secret_key: process.env.STRIPE_SECRET_KEY,
