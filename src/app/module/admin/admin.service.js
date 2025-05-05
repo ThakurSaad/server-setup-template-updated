@@ -2,21 +2,22 @@ const { default: status } = require("http-status");
 const ApiError = require("../../../error/ApiError");
 const Auth = require("../auth/Auth");
 const Admin = require("./Admin");
+const unlinkFile = require("../../../util/unlinkFile");
 
 const updateProfile = async (req) => {
   const { files, body: data } = req;
   const { userId, authId } = req.user;
-  const updatedData = { ...data };
-
-  if (data?.profile_image === "")
-    throw new ApiError(status.BAD_REQUEST, `Missing profile image`);
-
-  if (files && files.profile_image)
-    updatedData.profile_image = files.profile_image[0].path;
-
+  const updatedData = {
+    ...(data.address && { address: data.name }),
+    ...(data.phoneNumber && { phoneNumber: data.name }),
+    ...(data.name && { name: data.name }),
+  };
   const existingUser = await Admin.findById(userId).lean();
 
-  unlinkFile(existingUser.profile_image);
+  if (files && files.profile_image) {
+    updatedData.profile_image = files.profile_image[0].path;
+    unlinkFile(existingUser.profile_image);
+  }
 
   const [auth, admin] = await Promise.all([
     Auth.findByIdAndUpdate(

@@ -19,7 +19,7 @@ const otpResendTemp = (data) => `
         }
         h1 {
           text-align: center;
-          color: #0F5E5B;
+          color: #022C22;
           font-size: 26px;
           font-weight: bold;
           margin-bottom: 20px;
@@ -43,7 +43,7 @@ const otpResendTemp = (data) => `
           padding: 14px 24px;
           font-size: 20px;
           font-weight: bold;
-          color: #0F5E5B;
+          color: #022C22;
           border-radius: 6px;
           letter-spacing: 2px;
           margin: 20px 0;
@@ -58,7 +58,7 @@ const otpResendTemp = (data) => `
           margin: 5px 0;
         }
         a {
-          color: #0F5E5B;
+          color: #022C22;
           text-decoration: none;
         }
       </style>
@@ -83,10 +83,10 @@ const otpResendTemp = (data) => `
         <p>
           If you did not request this code, please disregard this message. For assistance, reach out to us.
         </p>
-        <p>Thank you,<br>The Selling Point Team</p>
+        <p>Thank you,<br>The Dudu Team</p>
       </div>
       <div class="footer">
-        <p>&copy; Selling Point - All Rights Reserved.</p>
+        <p>&copy; Dudu - All Rights Reserved.</p>
         <p>For support, contact us at <a href="mailto:support@company.com">support@company.com</a></p>
       </div>
     </body>
