@@ -1,17 +1,40 @@
 const EnumUserRole = {
   USER: "USER",
-  HOST: "HOST",
+  DRIVER: "DRIVER",
   ADMIN: "ADMIN",
+  SUPER_ADMIN: "SUPER_ADMIN",
 };
 
-const EnumPaymentType = {
+const EnumPaymentStatus = {
   SUCCEEDED: "succeeded",
   UNPAID: "unpaid",
-  TRANSFERRED: "transferred",
-  REFUNDED: "refunded",
+};
+
+const EnumSocketEvent = {
+  CONNECTION: "connection",
+  DISCONNECT: "disconnect",
+  SOCKET_ERROR: "socket_error",
+  ONLINE_STATUS: "online_status",
+
+  START_CHAT: "start_chat",
+  SEND_MESSAGE: "send_message",
+};
+
+const EnumLoginProvider = {
+  LOCAL: "local",
+  GOOGLE: "google",
+  APPLE: "apple",
+};
+
+const EnumUserAccountStatus = {
+  VERIFIED: "verified",
+  UNVERIFIED: "unverified",
 };
 
 module.exports = {
   EnumUserRole,
-  EnumPaymentType,
+  EnumPaymentStatus,
+  EnumSocketEvent,
+  EnumLoginProvider,
+  EnumUserAccountStatus,
 };

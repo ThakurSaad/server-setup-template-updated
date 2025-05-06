@@ -1,14 +1,14 @@
 const { errorLogger, logger } = require("./util/logger");
 const connectDB = require("./connection/connectDB");
 const config = require("./config");
-const app = require("./app");
+const mainServer = require("./connection/socket");
 
 async function main() {
   try {
     await connectDB();
     logger.info(`DB Connected Successfully at ${new Date().toLocaleString()}`);
 
-    app.listen(Number(config.port), config.base_url, () => {
+    mainServer.listen(Number(config.port), config.base_url, () => {
       logger.info(`App listening on http://${config.base_url}:${config.port}`);
     });
 
