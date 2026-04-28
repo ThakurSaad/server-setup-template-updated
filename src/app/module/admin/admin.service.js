@@ -3,20 +3,26 @@ const ApiError = require("../../../error/ApiError");
 const Auth = require("../auth/Auth");
 const Admin = require("./Admin");
 const unlinkFile = require("../../../util/unlinkFile");
+const deleteFalsyField = require("../../../util/deleteFalsyField");
 
 const updateProfile = async (req) => {
   const { files, body: data } = req;
   const { userId, authId } = req.user;
+
   const updatedData = {
-    ...(data.address && { address: data.name }),
-    ...(data.phoneNumber && { phoneNumber: data.name }),
+    ...(data.address && { address: data.address }),
+    ...(data.phoneNumber && { phoneNumber: data.phoneNumber }),
     ...(data.name && { name: data.name }),
   };
+
+  deleteFalsyField(updatedData);
   const existingUser = await Admin.findById(userId).lean();
 
   if (files && files.profile_image) {
+    if (existingUser.profile_image) {
+      unlinkFile(existingUser.profile_image);
+    }
     updatedData.profile_image = files.profile_image[0].path;
-    unlinkFile(existingUser.profile_image);
   }
 
   const [auth, admin] = await Promise.all([
@@ -25,14 +31,14 @@ const updateProfile = async (req) => {
       { name: updatedData.name },
       {
         new: true,
-      }
+      },
     ),
     Admin.findByIdAndUpdate(
       userId,
       { ...updatedData },
       {
         new: true,
-      }
+      },
     ).populate("authId"),
   ]);
 

@@ -10,15 +10,22 @@ const updateProfile = async (req) => {
   const { userId, authId } = req.user;
   const updateData = { ...data };
 
-  if (data?.profile_image === "")
-    throw new ApiError(status.BAD_REQUEST, `Missing profile image`);
-
-  if (files && files.profile_image)
-    updateData.profile_image = files.profile_image[0].path;
-
+  deleteFalsyField(data);
   const existingUser = await User.findById(userId).lean();
 
-  unlinkFile(existingUser.profile_image);
+  if (files && files.profile_image) {
+    if (existingUser.profile_image) {
+      unlinkFile(existingUser.profile_image);
+    }
+    updateData.profile_image = files.profile_image[0].path;
+  }
+
+  if (files && files.id_or_passport_image) {
+    if (existingUser.id_or_passport_image) {
+      unlinkFile(existingUser.id_or_passport_image);
+    }
+    updateData.id_or_passport_image = files.id_or_passport_image[0].path;
+  }
 
   const [auth, user] = await Promise.all([
     Auth.findByIdAndUpdate(
@@ -26,14 +33,14 @@ const updateProfile = async (req) => {
       { name: updateData.name },
       {
         new: true,
-      }
+      },
     ),
     User.findByIdAndUpdate(
       userId,
       { ...updateData },
       {
         new: true,
-      }
+      },
     ).populate("authId"),
   ]);
 
