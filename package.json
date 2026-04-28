@@ -1,5 +1,5 @@
 {
-  "name": "track-trek",
+  "name": "top-of-everest",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -19,7 +19,7 @@
   "keywords": [],
   "author": "thakur-saad",
   "license": "ISC",
-  "description": "track booking and racing service",
+  "description": "top of everest",
   "dependencies": {
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.2",
