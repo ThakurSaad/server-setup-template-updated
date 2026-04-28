@@ -34,12 +34,12 @@ const postFeedback = async (userData, payload) => {
     postNotification(
       "Thank You",
       "Thank you for your valuable feedback 🫡",
-      userData.userId
+      userData.userId,
     );
 
   postNotification(
     "New Feedback",
-    "Selling point got a new feedback. Check it out!"
+    "Mount Fuji got a new feedback. Check it out!",
   );
 
   return feedback;
@@ -95,7 +95,7 @@ const updateFeedbackWithReply = async (useData, payload) => {
   const feedback = await Feedback.findByIdAndUpdate(
     payload.feedbackId,
     { reply: payload.reply },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   );
 
   if (!feedback) throw new ApiError(status.NOT_FOUND, "Feedback not found");
@@ -104,7 +104,7 @@ const updateFeedbackWithReply = async (useData, payload) => {
     postNotification(
       "Feedback Reply",
       "Admin has replied to your feedback",
-      feedback.user
+      feedback.user,
     );
 
   return feedback;

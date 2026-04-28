@@ -7,6 +7,7 @@ const { EnumSocketEvent } = require("../util/enum");
 const postNotification = require("../util/postNotification");
 const validateSocketFields = require("../util/validateSocketFields");
 const emitError = require("./emitError");
+const socketCatchAsync = require("../util/socketCatchAsync");
 
 const sendMessage = socketCatchAsync(async (socket, io, payload) => {
   validateSocketFields(socket, payload, ["receiverId", "chatId", "message"]);
