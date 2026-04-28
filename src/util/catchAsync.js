@@ -4,6 +4,7 @@ const catchAsync = (fn) => {
       return await fn(req, res, next);
     } catch (error) {
       console.log(error);
+      deleteUploadedFiles(req.uploadedFiles);
       next(error);
     }
   };

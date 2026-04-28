@@ -67,13 +67,20 @@ const getProfile = async (userData) => {
 const deleteMyAccount = async (payload) => {
   const { email, password } = payload;
 
-  const isUserExist = await Auth.isAuthExist(email);
-  if (!isUserExist) throw new ApiError(status.NOT_FOUND, "User does not exist");
+  const isUserExist = await User.findOne({ email }).lean();
+
+  if (!isUserExist) {
+    throw new ApiError(status.NOT_FOUND, "User does not exist");
+  }
   if (
     isUserExist.password &&
     !(await Auth.isPasswordMatched(password, isUserExist.password))
   ) {
     throw new ApiError(status.FORBIDDEN, "Password is incorrect");
+  }
+
+  if (isUserExist.profile_image) {
+    unlinkFile(isUserExist.profile_image);
   }
 
   Promise.all([
