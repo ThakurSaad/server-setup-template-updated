@@ -3,11 +3,11 @@ const { default: status } = require("http-status");
 const User = require("../app/module/user/User");
 
 const emitError = require("./emitError");
-const socketCatchAsync = require("../util/socketCatchAsync");
-const postNotification = require("../util/postNotification");
 const emitResult = require("./emitResult");
-const validateSocketFields = require("../util/socketValidateFields");
+const postNotification = require("../util/postNotification");
+const socketCatchAsync = require("../util/socketCatchAsync");
 const { EnumSocketEvent } = require("../util/enum");
+const validateSocketFields = require("../util/validateSocketFields");
 
 const validateUser = socketCatchAsync(async (socket, io, payload) => {
   if (!payload.userId) {
@@ -15,7 +15,7 @@ const validateUser = socketCatchAsync(async (socket, io, payload) => {
       socket,
       status.BAD_REQUEST,
       "userId is required to connect",
-      "disconnect"
+      "disconnect",
     );
     return null;
   }
@@ -37,7 +37,7 @@ const updateOnlineStatus = socketCatchAsync(async (socket, io, payload) => {
   const updatedUser = await User.findByIdAndUpdate(
     userId,
     { isOnline },
-    { new: true }
+    { new: true },
   );
 
   socket.emit(
@@ -47,7 +47,7 @@ const updateOnlineStatus = socketCatchAsync(async (socket, io, payload) => {
       success: true,
       message: `You are ${updatedUser.isOnline ? "online" : "offline"}`,
       data: { isOnline: updatedUser.isOnline },
-    })
+    }),
   );
 });
 
@@ -59,7 +59,7 @@ const updateLocation = socketCatchAsync(async (socket, io, payload) => {
   const updatedUser = await User.findByIdAndUpdate(
     userId,
     { locationCoordinates: { coordinates: [Number(long), Number(lat)] } },
-    { new: true, runValidators: true }
+    { new: true, runValidators: true },
   );
 
   // Broadcast to everyone (consider throttling in production)
@@ -70,7 +70,7 @@ const updateLocation = socketCatchAsync(async (socket, io, payload) => {
       success: true,
       message: "Location updated",
       data: updatedUser,
-    })
+    }),
   );
 });
 
@@ -117,7 +117,7 @@ const handleStatusNotifications = (io, trip, newStatus) => {
       success: true,
       message: messageMap[newStatus].rider,
       data: trip,
-    })
+    }),
   );
 
   postNotification(`Trip update`, messageMap[newStatus].rider, trip.user);
@@ -131,7 +131,7 @@ const handleStatusNotifications = (io, trip, newStatus) => {
         success: true,
         message: messageMap[newStatus].driver,
         data: trip,
-      })
+      }),
     );
 
     postNotification(`Trip update`, messageMap[newStatus].driver, trip.driver);
