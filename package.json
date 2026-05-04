@@ -3,18 +3,23 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
+    "start": "node dist/server.js",
+    "start:js": "node src/server.js",
+    "dev": "tsx watch src/server.ts",
+    "dev:js": "nodemon src/server.js",
+    "clean": "rimraf dist",
+    "build": "npm run clean && tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "memory-usage": "node --trace_gc src/server.js",
-    "lint:check": "eslint --ignore-path .eslintignore --ext .js .",
+    "lint:check": "eslint .",
     "lint:fix": "eslint . --fix",
+    "prettier:check": "prettier --check \"**/*.{js,ts,json,md}\"",
     "prettier:fix": "prettier --write .",
-    "prettier:check": "prettier --ignore-path .gitignore --check \"**/*.+(js|json)\"",
     "lint-prettier": "yarn lint:check && yarn prettier:check",
-    "make:file": "node src/util/generateModule.js"
+    "make:file": "tsx src/util/generateModule.ts"
   },
   "lint-staged": {
-    "src/**/*.js": "yarn lint-prettier"
+    "src/**/*.{js,ts}": "eslint --fix"
   },
   "keywords": [],
   "author": "thakur-saad",
@@ -43,5 +48,23 @@
     "validator": "^13.15.26",
     "winston": "^3.19.0",
     "winston-daily-rotate-file": "^5.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/bcrypt": "^6.0.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.1.0",
+    "@types/node": "^25.6.0",
+    "@types/nodemailer": "^8.0.0",
+    "@types/validator": "^13.15.10",
+    "eslint": "^10.3.0",
+    "prettier": "^3.8.3",
+    "rimraf": "^6.1.3",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.1"
   }
 }
