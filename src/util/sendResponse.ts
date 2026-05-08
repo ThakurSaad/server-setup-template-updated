@@ -1,18 +1,18 @@
 import type { Response } from "express";
 import type { ApiResponse } from "../types/common.types";
 
-const sendResponse = <T>(res: Response, data: ApiResponse<T>) => {
+const sendResponse = <T>(res: Response, data: ApiResponse<T>): void => {
   const responseData = {
     statusCode: data.statusCode,
     success: data.success,
-    message: data.message ?? null,
-    meta: data.meta ?? undefined,
-    data: data.data ?? null,
-    activationToken: data.activationToken ?? null,
+    ...(data.message != null && { message: data.message }),
+    ...(data.meta != null && { meta: data.meta }),
+    ...(data.data != null && { data: data.data }),
+    ...(data.activationToken != null && {
+      activationToken: data.activationToken,
+    }),
   };
 
-  if (responseData.activationToken === null)
-    delete responseData.activationToken;
   res.status(data.statusCode).json(responseData);
 };
 

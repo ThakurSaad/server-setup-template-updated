@@ -1,11 +1,31 @@
-const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
-const config = require("../../../config");
-const validator = require("validator");
+import { Schema, model, type Model } from "mongoose";
+import bcrypt from "bcrypt";
+import validator from "validator";
+import config from "../../../config";
 
-const { Schema, model } = mongoose;
+interface IAuth {
+  name: string;
+  email: string;
+  password: string;
+  role: "USER" | "ADMIN";
+  isVerified?: boolean;
+  isBlocked?: boolean;
+  isActive?: boolean;
+  verificationCode?: string;
+  verificationCodeExpire?: Date;
+  activationCode?: string;
+  activationCodeExpire?: Date;
+}
 
-const AuthSchema = new Schema(
+interface AuthModel extends Model<IAuth> {
+  isAuthExist(email: string): Promise<IAuth | null>;
+  isPasswordMatched(
+    givenPassword: string,
+    savedPassword: string,
+  ): Promise<boolean>;
+}
+
+const AuthSchema = new Schema<IAuth, AuthModel>(
   {
     name: {
       type: String,
@@ -56,10 +76,10 @@ const AuthSchema = new Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-AuthSchema.statics.isAuthExist = async function (email) {
+AuthSchema.statics.isAuthExist = async function (email: string) {
   return await this.findOne(
     { email },
     {
@@ -70,30 +90,26 @@ AuthSchema.statics.isAuthExist = async function (email) {
       isActive: 1,
       isBlocked: 1,
       isVerified: 1,
-    }
+    },
   );
 };
 
 AuthSchema.statics.isPasswordMatched = async function (
-  givenPassword,
-  savedPassword
+  givenPassword: string,
+  savedPassword: string,
 ) {
-  const result = await bcrypt.compare(givenPassword, savedPassword);
-  return result;
+  return await bcrypt.compare(givenPassword, savedPassword);
 };
 
-AuthSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    return next();
-  }
+AuthSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
 
   this.password = await bcrypt.hash(
     this.password,
-    Number(config.bcrypt_salt_rounds)
+    Number(config.bcrypt_salt_rounds),
   );
-  next();
 });
 
-const Auth = model("Auth", AuthSchema);
+const Auth = model<IAuth, AuthModel>("Auth", AuthSchema);
 
-module.exports = Auth;
+export = Auth;
