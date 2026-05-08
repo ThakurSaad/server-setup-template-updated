@@ -20,7 +20,7 @@ const resetPassEmailTemp = (data) => `
         }
         h1 {
           text-align: center;
-          color: #022C22;
+          color: #b26a7b;
           font-size: 26px;
           font-weight: bold;
           margin-bottom: 20px;
@@ -40,11 +40,11 @@ const resetPassEmailTemp = (data) => `
         }
         .code {
           text-align: center;
-          background-color: #e8f0fe;
+          background-color: #b26a7b26;
           padding: 14px 24px;
           font-size: 20px;
           font-weight: bold;
-          color: #022C22;
+          color: #b26a7b;
           border-radius: 6px;
           letter-spacing: 2px;
           margin: 20px 0;
@@ -59,7 +59,7 @@ const resetPassEmailTemp = (data) => `
           margin: 5px 0;
         }
         a {
-          color: #022C22;
+          color: #b26a7b;
           text-decoration: none;
         }
       </style>
@@ -86,10 +86,10 @@ const resetPassEmailTemp = (data) => `
         <p>
           If you did not request a password reset, please disregard this email or contact support.
         </p>
-        <p>Thank you,<br>The Dudu Team</p>
+        <p>Thank you,<br>The Mount Fuji Team</p>
       </div>
       <div class="footer">
-        <p>&copy; ${new Date().getFullYear()} Dudu - All Rights Reserved.</p>
+        <p>&copy; ${new Date().getFullYear()} Mount Fuji - All Rights Reserved.</p>
         <p>
           <a href="https://yourwebsite.com/privacy">Privacy Policy</a> |
           <a href="https://yourwebsite.com/contact">Contact Support</a>

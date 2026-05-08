@@ -39,7 +39,7 @@ const registrationAccount = async (payload) => {
     user: name,
     activationCode,
     activationCodeExpire: Math.round(
-      (activationCodeExpire - Date.now()) / (60 * 1000)
+      (activationCodeExpire - Date.now()) / (60 * 1000),
     ),
   };
 
@@ -48,7 +48,7 @@ const registrationAccount = async (payload) => {
   if (password !== confirmPassword)
     throw new ApiError(
       status.BAD_REQUEST,
-      "Password and Confirm Password didn't match"
+      "Password and Confirm Password didn't match",
     );
 
   const user = await Auth.findOne({ email });
@@ -120,7 +120,7 @@ const activateAccount = async (payload) => {
   if (!auth.activationCode)
     throw new ApiError(
       status.NOT_FOUND,
-      "Activation code not found. Get a new activation code"
+      "Activation code not found. Get a new activation code",
     );
   if (auth.activationCode !== activationCode)
     throw new ApiError(status.BAD_REQUEST, "Code didn't match!");
@@ -131,7 +131,7 @@ const activateAccount = async (payload) => {
     {
       new: true,
       runValidators: true,
-    }
+    },
   );
 
   let result;
@@ -153,12 +153,12 @@ const activateAccount = async (payload) => {
   const accessToken = jwtHelpers.createToken(
     tokenPayload,
     config.jwt.secret,
-    config.jwt.expires_in
+    config.jwt.expires_in,
   );
   const refreshToken = jwtHelpers.createToken(
     tokenPayload,
     config.jwt.refresh_secret,
-    config.jwt.refresh_expires_in
+    config.jwt.refresh_expires_in,
   );
 
   return {
@@ -176,7 +176,7 @@ const loginAccount = async (payload) => {
   if (!auth.isActive)
     throw new ApiError(
       status.BAD_REQUEST,
-      "Please activate your account then try to login"
+      "Please activate your account then try to login",
     );
   if (auth.isBlocked)
     throw new ApiError(status.FORBIDDEN, "You are blocked. Contact support");
@@ -198,8 +198,8 @@ const loginAccount = async (payload) => {
   }
 
   const tokenPayload = {
-    authId: auth._id,
-    userId: result._id,
+    authId: String(auth._id),
+    userId: String(result._id),
     email,
     role: auth.role,
   };
@@ -207,13 +207,13 @@ const loginAccount = async (payload) => {
   const accessToken = jwtHelpers.createToken(
     tokenPayload,
     config.jwt.secret,
-    config.jwt.expires_in
+    config.jwt.expires_in,
   );
 
   const refreshToken = jwtHelpers.createToken(
     tokenPayload,
     config.jwt.refresh_secret,
-    config.jwt.refresh_expires_in
+    config.jwt.refresh_expires_in,
   );
 
   return {
@@ -241,7 +241,7 @@ const forgotPass = async (payload) => {
     name: user.name,
     verificationCode,
     verificationCodeExpire: Math.round(
-      (verificationCodeExpire - Date.now()) / (60 * 1000)
+      (verificationCodeExpire - Date.now()) / (60 * 1000),
     ),
   };
 
@@ -258,14 +258,14 @@ const forgetPassOtpVerify = async (payload) => {
   if (!auth.verificationCode)
     throw new ApiError(
       status.NOT_FOUND,
-      "No verification code. Get a new verification code"
+      "No verification code. Get a new verification code",
     );
   if (auth.verificationCode !== code)
     throw new ApiError(status.BAD_REQUEST, "Invalid verification code!");
 
   await Auth.updateOne(
     { email: auth.email },
-    { isVerified: true, verificationCode: null }
+    { isVerified: true, verificationCode: null },
   );
 };
 
@@ -291,7 +291,7 @@ const resetPassword = async (payload) => {
         verificationCode: "",
         verificationCodeExpire: "",
       },
-    }
+    },
   );
 };
 
@@ -304,7 +304,7 @@ const changePassword = async (userData, payload) => {
   if (newPassword !== confirmPassword)
     throw new ApiError(
       status.BAD_REQUEST,
-      "Password and confirm password do not match"
+      "Password and confirm password do not match",
     );
 
   const isUserExist = await Auth.isAuthExist(email);
@@ -336,7 +336,7 @@ const updateFieldsWithCron = async (check) => {
           activationCode: "",
           activationCodeExpire: "",
         },
-      }
+      },
     );
   }
 
@@ -351,7 +351,7 @@ const updateFieldsWithCron = async (check) => {
           verificationCode: "",
           verificationCodeExpire: "",
         },
-      }
+      },
     );
   }
 
@@ -359,7 +359,7 @@ const updateFieldsWithCron = async (check) => {
     logger.info(
       `Removed ${result.modifiedCount} expired ${
         check === "activation" ? "activation" : "verification"
-      } code`
+      } code`,
     );
 };
 

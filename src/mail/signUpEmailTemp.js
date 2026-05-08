@@ -19,7 +19,7 @@ const signUpEmailTemp = (data) => `
           box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
         }
         h1 {
-          color: #022C22;
+          color: #b26a7b;
           font-size: 26px;
           margin-bottom: 20px;
           font-weight: bold;
@@ -40,11 +40,11 @@ const signUpEmailTemp = (data) => `
         }
         .code {
           text-align: center;
-          background-color: #e8f0fe;
+          background-color: #b26a7b26;
           padding: 14px 24px;
           font-size: 20px;
           font-weight: bold;
-          color: #022C22;
+          color: #b26a7b;
           border-radius: 6px;
           letter-spacing: 2px;
           margin: 20px 0;
@@ -59,7 +59,7 @@ const signUpEmailTemp = (data) => `
           margin: 5px 0;
         }
         a {
-          color: #022C22;
+          color: #b26a7b;
           text-decoration: none;
         }
       </style>
@@ -69,16 +69,16 @@ const signUpEmailTemp = (data) => `
         <div class="logo">
           <img src="${process.env.EMAIL_TEMP_IMAGE}" alt="Logo" class="logo-img" />
         </div>
-        <h1>Welcome to Dudu</h1>
+        <h1>Welcome to Mount Fuji</h1>
         <p>Hello, ${data.user}</p>
-        <p>Thank you for registering with Dudu. To activate your account, please use the following activation code:</p>
+        <p>Thank you for registering with Mount Fuji. To activate your account, please use the following activation code:</p>
         <div class="code">${data.activationCode}</div>
         <p>Please enter this code on the activation page within the next <strong>${data.activationCodeExpire} minutes</strong>.</p>
         <p>If you have any questions, please contact us at <a href="mailto:thakursaad613@gmail.com">thakursaad613@gmail.com</a>.</p>
-        <p>Thank you,<br>The Dudu Team</p>
+        <p>Thank you,<br>The Mount Fuji Team</p>
       </div>
       <div class="footer">
-        <p>&copy; Dudu - All Rights Reserved.</p>
+        <p>&copy; Mount Fuji - All Rights Reserved.</p>
         <p>
           <a href="https://yourwebsite.com/privacy">Privacy Policy</a> |
           <a href="https://yourwebsite.com/contact">Contact Support</a>
