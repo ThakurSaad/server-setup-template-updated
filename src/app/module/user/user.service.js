@@ -1,3 +1,5 @@
+import deleteFalsyField from "../../../util/deleteFalsyField";
+
 const { status } = require("http-status");
 
 const ApiError = require("../../../error/ApiError");
@@ -32,14 +34,14 @@ const updateProfile = async (req) => {
       authId,
       { name: updateData.name },
       {
-        new: true,
+        returnDocument: "after",
       },
     ),
     User.findByIdAndUpdate(
       userId,
       { ...updateData },
       {
-        new: true,
+        returnDocument: "after",
       },
     ).populate("authId"),
   ]);

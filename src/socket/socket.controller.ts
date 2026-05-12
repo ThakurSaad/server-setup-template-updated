@@ -37,7 +37,7 @@ const updateOnlineStatus = socketCatchAsync(async (socket, io, payload) => {
   const updatedUser = await User.findByIdAndUpdate(
     userId,
     { isOnline },
-    { new: true },
+    { returnDocument: "after" },
   );
 
   socket.emit(
@@ -59,7 +59,7 @@ const updateLocation = socketCatchAsync(async (socket, io, payload) => {
   const updatedUser = await User.findByIdAndUpdate(
     userId,
     { locationCoordinates: { coordinates: [Number(long), Number(lat)] } },
-    { new: true, runValidators: true },
+    { returnDocument: "after", runValidators: true },
   );
 
   // Broadcast to everyone (consider throttling in production)
@@ -73,70 +73,6 @@ const updateLocation = socketCatchAsync(async (socket, io, payload) => {
     }),
   );
 });
-
-// utility functions =============================================================================================================================
-
-const handleStatusNotifications = (io, trip, newStatus) => {
-  const eventName = EnumSocketEvent.TRIP_UPDATE_STATUS;
-  const messageMap = {
-    [TripStatus.ON_THE_WAY]: {
-      rider: "Your driver is on the way",
-      driver: "You are on the way to the rider",
-    },
-    [TripStatus.ARRIVED]: {
-      rider: "Your driver has arrived",
-      driver: "You have arrived at the pickup location",
-    },
-    [TripStatus.PICKED_UP]: {
-      rider: "You've been picked up",
-      driver: "You have picked up the rider",
-    },
-    [TripStatus.STARTED]: {
-      rider: "Your trip has started",
-      driver: "The trip has started",
-    },
-    [TripStatus.COMPLETED]: {
-      rider: "Your trip has been completed successfully",
-      driver: "You have successfully completed the trip",
-    },
-    [TripStatus.CANCELLED]: {
-      rider: "Your trip has been cancelled",
-      driver: "The trip has been cancelled",
-    },
-    [TripStatus.NO_SHOW]: {
-      rider: "You are marked as no show. You will be charged a fee",
-      driver: "The user is marked as no show",
-    },
-  };
-
-  // Notify user
-  io.to(trip.user.toString()).emit(
-    eventName,
-    emitResult({
-      statusCode: status.OK,
-      success: true,
-      message: messageMap[newStatus].rider,
-      data: trip,
-    }),
-  );
-
-  postNotification(`Trip update`, messageMap[newStatus].rider, trip.user);
-
-  // Notify driver if any
-  if (trip.driver) {
-    io.to(trip.driver.toString()).emit(
-      eventName,
-      emitResult({
-        statusCode: status.OK,
-        success: true,
-        message: messageMap[newStatus].driver,
-        data: trip,
-      }),
-    );
-
-    postNotification(`Trip update`, messageMap[newStatus].driver, trip.driver);
-  }
-};
 
 const SocketController = {
   validateUser,

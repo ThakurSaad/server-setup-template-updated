@@ -1,3 +1,5 @@
+import emitResult from "./emitResult";
+
 const { default: status } = require("http-status");
 
 const Chat = require("../app/module/chat/Chat");

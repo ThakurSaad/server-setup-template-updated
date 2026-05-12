@@ -95,7 +95,7 @@ const updateFeedbackWithReply = async (useData, payload) => {
   const feedback = await Feedback.findByIdAndUpdate(
     payload.feedbackId,
     { reply: payload.reply },
-    { new: true, runValidators: true },
+    { returnDocument: "after", runValidators: true },
   );
 
   if (!feedback) throw new ApiError(status.NOT_FOUND, "Feedback not found");
