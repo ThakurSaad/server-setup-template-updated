@@ -129,7 +129,7 @@ const activateAccount = async (payload) => {
     { email: email },
     { isActive: true },
     {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     },
   );

@@ -28,8 +28,10 @@
   "license": "ISC",
   "description": "top of everest",
   "dependencies": {
+    "@types/chalk": "^0.4.31",
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.2",
+    "chalk": "^4.1.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",

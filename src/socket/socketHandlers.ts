@@ -2,6 +2,7 @@ const { EnumSocketEvent, EnumUserRole } = require("../util/enum");
 const socketCatchAsync = require("../util/socketCatchAsync");
 const ChatSocketController = require("./chat.socket.controller");
 const SocketController = require("./socket.controller");
+const chalk = require("chalk");
 
 const socketHandlers = socketCatchAsync(async (socket, io, activeDrivers) => {
   console.log("Trying to connect");
@@ -13,7 +14,7 @@ const socketHandlers = socketCatchAsync(async (socket, io, activeDrivers) => {
 
   socket.join(userId);
 
-  console.log(userId, "connected");
+  console.log(userId, chalk.green("connected"));
 
   await SocketController.updateOnlineStatus(socket, io, {
     userId,
@@ -34,7 +35,7 @@ const socketHandlers = socketCatchAsync(async (socket, io, activeDrivers) => {
       isOnline: false,
     });
 
-    console.log(userId, "disconnected");
+    console.log(userId, chalk.red("disconnected"));
   });
 });
 

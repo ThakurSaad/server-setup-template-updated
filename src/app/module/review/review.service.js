@@ -63,19 +63,19 @@ const postReview = async (userData, payload) => {
     Car.updateOne(
       { _id: carId },
       { rating: avgCarRating },
-      { new: true, runValidators: true }
+      { returnDocument: "after", runValidators: true },
     ),
     User.updateOne(
       { _id: car.user },
       { rating: avgHostRating },
-      { new: true, runValidators: true }
+      { returnDocument: "after", runValidators: true },
     ),
   ]);
 
   postNotification(
     "New Review Alert",
     `You've received a new ${payload.rating}-star review.`,
-    car.user
+    car.user,
   );
 
   return result;
@@ -94,7 +94,7 @@ const getAllReviews = async (userData, query) => {
         },
       ])
       .lean(),
-    query
+    query,
   )
     .search([])
     .filter()
@@ -134,9 +134,9 @@ const updateReview = async (userData, payload) => {
     payload.reviewId,
     { $set: updateData },
     {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
-    }
+    },
   );
 
   if (!result) throw new ApiError(status.NOT_FOUND, "Review not found");

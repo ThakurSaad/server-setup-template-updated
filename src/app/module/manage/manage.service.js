@@ -13,7 +13,7 @@ const addTermsConditions = async (payload) => {
 
   if (checkIsExist) {
     const result = await TermsConditions.findOneAndUpdate({}, payload, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     });
 
@@ -46,7 +46,7 @@ const addPrivacyPolicy = async (payload) => {
 
   if (checkIsExist) {
     const result = await PrivacyPolicy.findOneAndUpdate({}, payload, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     });
 
@@ -80,7 +80,7 @@ const addAboutUs = async (payload) => {
 
   if (checkIsExist) {
     const result = await AboutUs.findOneAndUpdate({}, payload, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     });
 
@@ -113,7 +113,7 @@ const addFaq = async (payload) => {
 
   if (checkIsExist) {
     const result = await FAQ.findOneAndUpdate({}, payload, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     });
 
@@ -146,7 +146,7 @@ const addContactUs = async (payload) => {
 
   if (checkIsExist) {
     const result = await ContactUs.findOneAndUpdate({}, payload, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     });
 

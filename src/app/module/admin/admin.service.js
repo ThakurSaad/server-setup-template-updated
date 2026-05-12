@@ -30,14 +30,14 @@ const updateProfile = async (req) => {
       authId,
       { name: updatedData.name },
       {
-        new: true,
+        returnDocument: "after",
       },
     ),
     Admin.findByIdAndUpdate(
       userId,
       { ...updatedData },
       {
-        new: true,
+        returnDocument: "after",
       },
     ).populate("authId"),
   ]);
