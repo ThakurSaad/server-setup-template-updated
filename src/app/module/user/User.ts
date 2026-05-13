@@ -1,11 +1,10 @@
-const mongoose = require("mongoose");
+import { Schema, model } from "mongoose";
+import type { IUser } from "./user.interface";
 
-const { Schema, model, Types } = mongoose;
-
-const UserSchema = new Schema(
+const UserSchema = new Schema<IUser>(
   {
     authId: {
-      type: Types.ObjectId,
+      type: Schema.Types.ObjectId,
       required: true,
       ref: "Auth",
     },
@@ -32,9 +31,9 @@ const UserSchema = new Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const User = model("User", UserSchema);
+const User = model<IUser>("User", UserSchema);
 
-module.exports = User;
+export default User;

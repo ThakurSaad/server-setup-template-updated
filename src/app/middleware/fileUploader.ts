@@ -89,4 +89,4 @@ const uploadFile = () => {
   return upload;
 };
 
-module.exports = { uploadFile };
+export {uploadFile}
