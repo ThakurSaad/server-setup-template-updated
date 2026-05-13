@@ -5,6 +5,7 @@ declare global {
     interface Request {
       user?: AuthUserPayload;
       uploadedFiles?: string[];
+      files?: { [fieldname: string]: Multer.File[] } | Multer.File[];
     }
   }
 }
