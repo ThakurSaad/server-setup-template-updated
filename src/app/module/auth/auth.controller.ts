@@ -1,9 +1,10 @@
-const { AuthService } = require("./auth.service");
-const sendResponse = require("../../../util/sendResponse");
-const catchAsync = require("../../../util/catchAsync");
-const config = require("../../../config");
+import { AuthService } from "./auth.service";
+import sendResponse from "../../../util/sendResponse";
+import catchAsync from "../../../util/catchAsync";
+import config from "../../../config";
+import { Request, Response } from "express";
 
-const registrationAccount = catchAsync(async (req, res) => {
+const registrationAccount = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthService.registrationAccount(req.body);
 
   const isSuccess =
@@ -17,7 +18,7 @@ const registrationAccount = catchAsync(async (req, res) => {
   });
 });
 
-const resendActivationCode = catchAsync(async (req, res) => {
+const resendActivationCode = catchAsync(async (req: Request, res: Response) => {
   await AuthService.resendActivationCode(req.body);
   sendResponse(res, {
     statusCode: 200,
@@ -26,7 +27,7 @@ const resendActivationCode = catchAsync(async (req, res) => {
   });
 });
 
-const activateAccount = catchAsync(async (req, res) => {
+const activateAccount = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthService.activateAccount(req.body);
   const { refreshToken } = result;
 
@@ -43,7 +44,7 @@ const activateAccount = catchAsync(async (req, res) => {
   });
 });
 
-const loginAccount = catchAsync(async (req, res) => {
+const loginAccount = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthService.loginAccount(req.body);
   const { refreshToken } = result;
 
@@ -60,7 +61,7 @@ const loginAccount = catchAsync(async (req, res) => {
   });
 });
 
-const changePassword = catchAsync(async (req, res) => {
+const changePassword = catchAsync(async (req: Request, res: Response) => {
   await AuthService.changePassword(req.user, req.body);
   sendResponse(res, {
     statusCode: 200,
@@ -69,7 +70,7 @@ const changePassword = catchAsync(async (req, res) => {
   });
 });
 
-const forgotPass = catchAsync(async (req, res) => {
+const forgotPass = catchAsync(async (req: Request, res: Response) => {
   await AuthService.forgotPass(req.body);
   sendResponse(res, {
     statusCode: 200,
@@ -78,7 +79,7 @@ const forgotPass = catchAsync(async (req, res) => {
   });
 });
 
-const forgetPassOtpVerify = catchAsync(async (req, res) => {
+const forgetPassOtpVerify = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthService.forgetPassOtpVerify(req.body);
   sendResponse(res, {
     statusCode: 200,
@@ -88,7 +89,7 @@ const forgetPassOtpVerify = catchAsync(async (req, res) => {
   });
 });
 
-const resetPassword = catchAsync(async (req, res) => {
+const resetPassword = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthService.resetPassword(req.body);
   sendResponse(res, {
     statusCode: 200,
@@ -109,4 +110,4 @@ const AuthController = {
   resendActivationCode,
 };
 
-module.exports = { AuthController };
+export { AuthController };

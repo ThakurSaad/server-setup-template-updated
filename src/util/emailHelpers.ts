@@ -50,4 +50,4 @@ const EmailHelpers = {
   sendResetPasswordEmail,
 };
 
-module.exports = EmailHelpers;
+export = EmailHelpers;

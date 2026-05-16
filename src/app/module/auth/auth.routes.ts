@@ -1,8 +1,8 @@
-const express = require("express");
-const auth = require("../../middleware/auth");
-const { AuthController } = require("../auth/auth.controller");
-const config = require("../../../config");
-const limiter = require("../../middleware/limiter");
+import express from "express";
+import auth from "../../middleware/auth";
+import { AuthController } from "../auth/auth.controller";
+import config from "../../../config";
+import limiter from "../../middleware/limiter";
 
 const router = express.Router();
 
@@ -17,7 +17,7 @@ router
   .patch(
     "/change-password",
     auth(config.auth_level.user),
-    AuthController.changePassword
+    AuthController.changePassword,
   );
 
-module.exports = router;
+export = router;

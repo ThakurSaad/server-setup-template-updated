@@ -1,20 +1,28 @@
-const bcrypt = require("bcrypt");
-const cron = require("node-cron");
 const { status } = require("http-status");
+import { SignOptions } from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import cron from "node-cron";
 
-const ApiError = require("../../../error/ApiError");
-const config = require("../../../config");
-const { jwtHelpers } = require("../../../util/jwtHelpers");
-const { EnumUserRole } = require("../../../util/enum");
-const { logger } = require("../../../util/logger");
-const Auth = require("./Auth");
-const codeGenerator = require("../../../util/codeGenerator");
-const User = require("../user/User");
-const Admin = require("../admin/Admin");
-const validateFields = require("../../../util/validateFields");
-const EmailHelpers = require("../../../util/emailHelpers");
+import ApiError from "../../../error/ApiError";
+import config from "../../../config";
+import { jwtHelpers } from "../../../util/jwtHelpers";
+import { EnumUserRole } from "../../../util/enum";
+import { logger } from "../../../util/logger";
+import Auth from "./Auth";
+import codeGenerator from "../../../util/codeGenerator";
+import User from "../user/User";
+import Admin from "../admin/Admin";
+import validateFields from "../../../util/validateFields";
+import EmailHelpers from "../../../util/emailHelpers";
+import { AuthUserPayload } from "../../../types/auth.types";
 
-const registrationAccount = async (payload) => {
+const registrationAccount = async (payload: {
+  role: string;
+  name: string;
+  password: string;
+  confirmPassword: string;
+  email: string;
+}) => {
   const { role, name, password, confirmPassword, email } = payload;
 
   validateFields(payload, [
@@ -25,8 +33,8 @@ const registrationAccount = async (payload) => {
     "name",
   ]);
 
-  const { code: activationCode, expiredAt: activationCodeExpire } =
-    codeGenerator(3);
+  const { code: activationCode, expiredAt } = codeGenerator(3);
+  const activationCodeExpire = new Date(expiredAt);
   const authData = {
     role,
     name,
@@ -39,7 +47,7 @@ const registrationAccount = async (payload) => {
     user: name,
     activationCode,
     activationCodeExpire: Math.round(
-      (activationCodeExpire - Date.now()) / (60 * 1000),
+      (activationCodeExpire.getTime() - Date.now()) / (60 * 1000),
     ),
   };
 
@@ -91,28 +99,37 @@ const registrationAccount = async (payload) => {
   };
 };
 
-const resendActivationCode = async (payload) => {
+const resendActivationCode = async (payload: { email: string }) => {
   const email = payload.email;
 
   const user = await Auth.isAuthExist(email);
   if (!user) throw new ApiError(status.BAD_REQUEST, "Email not found!");
 
-  const { code: activationCode, expiredAt: activationCodeExpire } =
-    codeGenerator(3);
+  const { code: activationCode, expiredAt } = codeGenerator(3);
+  const activationCodeExpire = new Date(expiredAt);
   const data = {
     user: user.name,
     code: activationCode,
-    expiresIn: Math.round((activationCodeExpire - Date.now()) / (60 * 1000)),
+    expiresIn: Math.round(
+      (activationCodeExpire.getTime() - Date.now()) / (60 * 1000),
+    ),
   };
 
-  user.activationCode = activationCode;
-  user.activationCodeExpire = activationCodeExpire;
-  await user.save();
+  await Auth.updateOne(
+    { _id: user._id },
+    {
+      activationCode,
+      activationCodeExpire,
+    },
+  );
 
   EmailHelpers.sendOtpResendEmail(email, data);
 };
 
-const activateAccount = async (payload) => {
+const activateAccount = async (payload: {
+  activationCode: string;
+  email: string;
+}) => {
   const { activationCode, email } = payload;
 
   const auth = await Auth.findOne({ email });
@@ -129,7 +146,6 @@ const activateAccount = async (payload) => {
     { email: email },
     { isActive: true },
     {
-      returnDocument: "after",
       runValidators: true,
     },
   );
@@ -143,6 +159,8 @@ const activateAccount = async (payload) => {
       result = await User.findOne({ authId: auth._id }).lean();
   }
 
+  if (!result) throw new ApiError(status.NOT_FOUND, "Account detail not found");
+
   const tokenPayload = {
     authId: auth._id,
     userId: result._id,
@@ -153,12 +171,12 @@ const activateAccount = async (payload) => {
   const accessToken = jwtHelpers.createToken(
     tokenPayload,
     config.jwt.secret,
-    config.jwt.expires_in,
+    config.jwt.expires_in as SignOptions["expiresIn"],
   );
   const refreshToken = jwtHelpers.createToken(
     tokenPayload,
     config.jwt.refresh_secret,
-    config.jwt.refresh_expires_in,
+    config.jwt.refresh_expires_in as SignOptions["expiresIn"],
   );
 
   return {
@@ -167,7 +185,7 @@ const activateAccount = async (payload) => {
   };
 };
 
-const loginAccount = async (payload) => {
+const loginAccount = async (payload: { email: string; password: string }) => {
   const { email, password } = payload;
 
   const auth = await Auth.isAuthExist(email);
@@ -197,6 +215,8 @@ const loginAccount = async (payload) => {
       result = await User.findOne({ authId: auth._id }).populate("authId");
   }
 
+  if (!result) throw new ApiError(status.NOT_FOUND, "Account detail not found");
+
   const tokenPayload = {
     authId: String(auth._id),
     userId: String(result._id),
@@ -207,13 +227,13 @@ const loginAccount = async (payload) => {
   const accessToken = jwtHelpers.createToken(
     tokenPayload,
     config.jwt.secret,
-    config.jwt.expires_in,
+    config.jwt.expires_in as SignOptions["expiresIn"],
   );
 
   const refreshToken = jwtHelpers.createToken(
     tokenPayload,
-    config.jwt.refresh_secret,
-    config.jwt.refresh_expires_in,
+    config.jwt.refresh_secret as string,
+    config.jwt.refresh_expires_in as SignOptions["expiresIn"],
   );
 
   return {
@@ -222,7 +242,7 @@ const loginAccount = async (payload) => {
   };
 };
 
-const forgotPass = async (payload) => {
+const forgotPass = async (payload: { email: string }) => {
   const { email } = payload;
 
   if (!email) throw new ApiError(status.BAD_REQUEST, "Missing email");
@@ -230,25 +250,32 @@ const forgotPass = async (payload) => {
   const user = await Auth.isAuthExist(email);
   if (!user) throw new ApiError(status.BAD_REQUEST, "User not found!");
 
-  const { code: verificationCode, expiredAt: verificationCodeExpire } =
-    codeGenerator(3);
+  const { code: verificationCode, expiredAt } = codeGenerator(3);
+  const verificationCodeExpire = new Date(expiredAt);
 
-  user.verificationCode = verificationCode;
-  user.verificationCodeExpire = verificationCodeExpire;
-  await user.save();
+  await Auth.updateOne(
+    { _id: user._id },
+    {
+      verificationCode,
+      verificationCodeExpire,
+    },
+  );
 
   const data = {
     name: user.name,
     verificationCode,
     verificationCodeExpire: Math.round(
-      (verificationCodeExpire - Date.now()) / (60 * 1000),
+      (verificationCodeExpire.getTime() - Date.now()) / (60 * 1000),
     ),
   };
 
   EmailHelpers.sendResetPasswordEmail(email, data);
 };
 
-const forgetPassOtpVerify = async (payload) => {
+const forgetPassOtpVerify = async (payload: {
+  email: string;
+  code: string;
+}) => {
   const { email, code } = payload;
 
   if (!email) throw new ApiError(status.BAD_REQUEST, "Missing email");
@@ -269,7 +296,11 @@ const forgetPassOtpVerify = async (payload) => {
   );
 };
 
-const resetPassword = async (payload) => {
+const resetPassword = async (payload: {
+  email: string;
+  newPassword: string;
+  confirmPassword: string;
+}) => {
   const { email, newPassword, confirmPassword } = payload;
 
   if (newPassword !== confirmPassword)
@@ -295,7 +326,14 @@ const resetPassword = async (payload) => {
   );
 };
 
-const changePassword = async (userData, payload) => {
+const changePassword = async (
+  userData: AuthUserPayload,
+  payload: {
+    oldPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  },
+) => {
   const { email } = userData;
   const { oldPassword, newPassword, confirmPassword } = payload;
 
@@ -318,11 +356,10 @@ const changePassword = async (userData, payload) => {
     throw new ApiError(status.BAD_REQUEST, "Old password is incorrect");
   }
 
-  isUserExist.password = newPassword;
-  isUserExist.save();
+  await Auth.updateOne({ email }, { password: newPassword });
 };
 
-const updateFieldsWithCron = async (check) => {
+const updateFieldsWithCron = async (check: "activation" | "verification") => {
   const now = new Date();
   let result;
 
@@ -355,7 +392,7 @@ const updateFieldsWithCron = async (check) => {
     );
   }
 
-  if (result.modifiedCount > 0)
+  if (result && result.modifiedCount > 0)
     logger.info(
       `Removed ${result.modifiedCount} expired ${
         check === "activation" ? "activation" : "verification"
@@ -363,7 +400,7 @@ const updateFieldsWithCron = async (check) => {
     );
 };
 
-const hashPass = async (newPassword) => {
+const hashPass = async (newPassword: string) => {
   return await bcrypt.hash(newPassword, Number(config.bcrypt_salt_rounds));
 };
 
@@ -389,4 +426,4 @@ const AuthService = {
   resendActivationCode,
 };
 
-module.exports = { AuthService };
+export { AuthService };
