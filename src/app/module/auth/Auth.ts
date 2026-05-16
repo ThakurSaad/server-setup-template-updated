@@ -1,9 +1,10 @@
-import { Schema, model, type Model } from "mongoose";
+import { Schema, Types, model, type Model } from "mongoose";
 import bcrypt from "bcrypt";
 import validator from "validator";
 import config from "../../../config";
 
 interface IAuth {
+  _id: Types.ObjectId;
   name: string;
   email: string;
   password: string;

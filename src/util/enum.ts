@@ -33,7 +33,7 @@ const EnumUserAccountStatus = {
   UNVERIFIED: "unverified",
 };
 
-module.exports = {
+export {
   EnumUserRole,
   EnumPaymentStatus,
   EnumSocketEvent,

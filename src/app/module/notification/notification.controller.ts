@@ -1,8 +1,8 @@
-const NotificationService = require("./notification.service");
-const sendResponse = require("../../../util/sendResponse");
-const catchAsync = require("../../../util/catchAsync");
-
-const getNotification = catchAsync(async (req, res) => {
+import { NotificationService } from "./notification.service";
+import sendResponse from "../../../util/sendResponse";
+import catchAsync from "../../../util/catchAsync";
+import type { Request, Response } from "express";
+const getNotification = catchAsync(async (req: Request, res: Response) => {
   const result = await NotificationService.getNotification(req.user, req.query);
   sendResponse(res, {
     statusCode: 200,
@@ -12,10 +12,10 @@ const getNotification = catchAsync(async (req, res) => {
   });
 });
 
-const getAllNotifications = catchAsync(async (req, res) => {
+const getAllNotifications = catchAsync(async (req: Request, res: Response) => {
   const result = await NotificationService.getAllNotifications(
     req.user,
-    req.query
+    req.query,
   );
   sendResponse(res, {
     statusCode: 200,
@@ -25,10 +25,10 @@ const getAllNotifications = catchAsync(async (req, res) => {
   });
 });
 
-const updateAsReadUnread = catchAsync(async (req, res) => {
+const updateAsReadUnread = catchAsync(async (req: Request, res: Response) => {
   const result = await NotificationService.updateAsReadUnread(
     req.user,
-    req.body
+    req.body,
   );
   sendResponse(res, {
     statusCode: 200,
@@ -38,10 +38,10 @@ const updateAsReadUnread = catchAsync(async (req, res) => {
   });
 });
 
-const deleteNotification = catchAsync(async (req, res) => {
+const deleteNotification = catchAsync(async (req: Request, res: Response) => {
   const result = await NotificationService.deleteNotification(
     req.user,
-    req.body
+    req.body,
   );
   sendResponse(res, {
     statusCode: 200,
@@ -58,4 +58,4 @@ const NotificationController = {
   deleteNotification,
 };
 
-module.exports = NotificationController;
+export { NotificationController };
