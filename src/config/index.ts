@@ -1,11 +1,11 @@
-const dotenv = require("dotenv");
-const path = require("path");
+import * as dotenv from "dotenv";
+import * as path from "path";
 
 dotenv.config({
   path: path.join(process.cwd(), ".env"),
 });
 
-const validateConfig = (config) => {
+const validateConfig = (config: any) => {
   if (!config.jwt.secret) {
     throw new Error("Missing JWT secret");
   }
