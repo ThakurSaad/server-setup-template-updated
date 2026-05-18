@@ -99,4 +99,4 @@ const resetPassEmailTemp = (data) => `
   </html>
 `;
 
-module.exports = resetPassEmailTemp;
+export = resetPassEmailTemp;

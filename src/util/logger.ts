@@ -1,23 +1,35 @@
-const path = require("path");
-const { createLogger, format, transports } = require("winston");
-const DailyRotateFile = require("winston-daily-rotate-file");
+import path from "path";
+import { createLogger, format, transports } from "winston";
+import DailyRotateFile from "winston-daily-rotate-file";
 
 const { combine, timestamp, label, printf } = format;
 
 // Custom log format
-const myFormat = printf(({ level, message, label, timestamp }) => {
-  const date = new Date(timestamp);
-  const h = date.getHours();
-  const m = date.getMinutes();
-  const s = date.getSeconds();
+export const myFormat = printf(
+  ({
+    level,
+    message,
+    label,
+    timestamp,
+  }: {
+    label: string;
+    level: string;
+    timestamp: string;
+    message: string;
+  }) => {
+    const date = new Date(timestamp);
+    const h = date.getHours();
+    const m = date.getMinutes();
+    const s = date.getSeconds();
 
-  return `${date.toDateString()} ${h}:${m}:${s} [${label}] ${level}: ${message}`;
-});
+    return `${date.toDateString()} ${h}:${m}:${s} [${label}] ${level}: ${message}`;
+  },
+);
 
 const logDir = path.join(process.cwd(), "logs", "winston");
 
 // Logger for general information
-const logger = createLogger({
+export const logger = createLogger({
   level: "info",
   format: combine(label({ label: "Mount Fuji" }), timestamp(), myFormat),
   transports: [
@@ -38,7 +50,7 @@ const logger = createLogger({
 });
 
 // Logger for errors
-const errorLogger = createLogger({
+export const errorLogger = createLogger({
   level: "error",
   format: combine(label({ label: "Mount Fuji" }), timestamp(), myFormat),
   transports: [
@@ -53,5 +65,3 @@ const errorLogger = createLogger({
     }),
   ],
 });
-
-module.exports = { logger, errorLogger };

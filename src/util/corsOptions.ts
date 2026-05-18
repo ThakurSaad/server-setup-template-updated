@@ -1,7 +1,7 @@
-const allowedOrigins = ["https://www.example.com"];
+const allowedOrigins: string[] = ["https://www.example.com"];
 
 const corsOptions = {
-  origin: function (origin, callback) {
+  origin: function (origin: string | undefined, callback: any) {
     if (!origin) return callback(null, true);
 
     if (
@@ -16,3 +16,5 @@ const corsOptions = {
   },
   credentials: true,
 };
+
+export = corsOptions;

@@ -1,12 +1,13 @@
-const rateLimit = require("express-rate-limit");
-const sendResponse = require("../../util/sendResponse");
+import rateLimit from "express-rate-limit";
+import sendResponse from "../../util/sendResponse";
+import { Request, Response } from "express";
 
 const limiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   limit: 10,
   standardHeaders: "draft-8",
   legacyHeaders: false,
-  message: async (req, res) =>
+  message: async (req: Request, res: Response) =>
     sendResponse(res, {
       statusCode: 400,
       success: false,
@@ -14,4 +15,4 @@ const limiter = rateLimit({
     }),
 });
 
-module.exports = limiter;
+export = limiter;

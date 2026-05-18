@@ -42,41 +42,32 @@ const getAllNotifications = async (
   userData: AuthUserPayload,
   query: Record<string, unknown>,
 ) => {
-  const { role } = userData;
+  const { role, userId } = userData;
+  const baseQuery =
+    role === EnumUserRole.ADMIN
+      ? AdminNotification.find()
+      : Notification.find({ toId: userId });
 
-  if (role === EnumUserRole.ADMIN) {
-    const notificationQuery = new QueryBuilder(
-      AdminNotification.find().lean(),
-      query,
-    )
-      .search([])
-      .filter()
-      .sort()
-      .paginate()
-      .fields();
+  const notificationQuery = new QueryBuilder(baseQuery.lean(), query)
+    .search([])
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
 
-    const [notifications, meta] = await Promise.all([
-      notificationQuery.modelQuery,
-      notificationQuery.countTotal(),
-    ]);
+  const [notifications, meta] = await Promise.all([
+    notificationQuery.modelQuery,
+    notificationQuery.countTotal(),
+  ]);
 
-    if (!notifications) {
-      throw new ApiError(status.NOT_FOUND, "Notification not found");
-    }
-
-    return {
-      meta,
-      notifications,
-    };
+  if (!notifications) {
+    throw new ApiError(status.NOT_FOUND, "Notifications not found");
   }
 
-  const notification = await Notification.findOne({
-    toId: userData.userId,
-  }).lean();
-  if (!notification) {
-    throw new ApiError(status.NOT_FOUND, "Notification not found");
-  }
-  return notification;
+  return {
+    meta,
+    notifications,
+  };
 };
 
 const updateAsReadUnread = async (
@@ -92,9 +83,11 @@ const updateAsReadUnread = async (
         $set: { isRead: payload.isRead },
       },
     );
+
     if (!result.modifiedCount) {
       throw new ApiError(status.BAD_REQUEST, "Already updated");
     }
+
     return result;
   }
 
@@ -106,9 +99,11 @@ const updateAsReadUnread = async (
       $set: { isRead: payload.isRead },
     },
   );
+
   if (!result.modifiedCount) {
     throw new ApiError(status.BAD_REQUEST, "Already updated");
   }
+
   return result;
 };
 
@@ -120,20 +115,17 @@ const deleteNotification = async (
   validateFields(payload, ["notificationId"]);
 
   if (role === EnumUserRole.ADMIN) {
-    const result = await AdminNotification.deleteOne({
-      _id: payload.notificationId,
-    });
-    if (!result.deletedCount) {
+    const result = await AdminNotification.findByIdAndDelete(
+      payload.notificationId,
+    );
+    if (!result) {
       throw new ApiError(status.NOT_FOUND, "Notification not found");
     }
     return result;
   }
 
-  const result = await Notification.deleteOne({
-    _id: payload.notificationId,
-    toId: userData.userId,
-  });
-  if (!result.deletedCount) {
+  const result = await Notification.findByIdAndDelete(payload.notificationId);
+  if (!result) {
     throw new ApiError(status.NOT_FOUND, "Notification not found");
   }
   return result;

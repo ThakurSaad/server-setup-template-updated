@@ -7,7 +7,6 @@ import ApiError from "../../../error/ApiError";
 import config from "../../../config";
 import { jwtHelpers } from "../../../util/jwtHelpers";
 import { EnumUserRole } from "../../../util/enum";
-import { logger } from "../../../util/logger";
 import Auth from "./Auth";
 import codeGenerator from "../../../util/codeGenerator";
 import User from "../user/User";
@@ -15,6 +14,8 @@ import Admin from "../admin/Admin";
 import validateFields from "../../../util/validateFields";
 import EmailHelpers from "../../../util/emailHelpers";
 import { AuthUserPayload } from "../../../types/auth.types";
+import { logger } from "../../../util/logger";
+
 
 const registrationAccount = async (payload: {
   role: string;
@@ -109,8 +110,8 @@ const resendActivationCode = async (payload: { email: string }) => {
   const activationCodeExpire = new Date(expiredAt);
   const data = {
     user: user.name,
-    code: activationCode,
-    expiresIn: Math.round(
+    activationCode,
+    activationCodeExpire: Math.round(
       (activationCodeExpire.getTime() - Date.now()) / (60 * 1000),
     ),
   };
@@ -232,7 +233,7 @@ const loginAccount = async (payload: { email: string; password: string }) => {
 
   const refreshToken = jwtHelpers.createToken(
     tokenPayload,
-    config.jwt.refresh_secret as string,
+    config.jwt.refresh_secret,
     config.jwt.refresh_expires_in as SignOptions["expiresIn"],
   );
 
@@ -262,7 +263,7 @@ const forgotPass = async (payload: { email: string }) => {
   );
 
   const data = {
-    name: user.name,
+    user: user.name,
     verificationCode,
     verificationCodeExpire: Math.round(
       (verificationCodeExpire.getTime() - Date.now()) / (60 * 1000),

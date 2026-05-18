@@ -2,6 +2,7 @@ import { NotificationService } from "./notification.service";
 import sendResponse from "../../../util/sendResponse";
 import catchAsync from "../../../util/catchAsync";
 import type { Request, Response } from "express";
+
 const getNotification = catchAsync(async (req: Request, res: Response) => {
   const result = await NotificationService.getNotification(req.user, req.query);
   sendResponse(res, {
@@ -21,7 +22,8 @@ const getAllNotifications = catchAsync(async (req: Request, res: Response) => {
     statusCode: 200,
     success: true,
     message: "Notifications retrieved",
-    data: result,
+    meta: result.meta,
+    data: result.notifications,
   });
 });
 

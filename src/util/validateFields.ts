@@ -1,7 +1,10 @@
 const { default: status } = require("http-status");
-const ApiError = require("../error/ApiError");
+import ApiError from "../error/ApiError";
 
-const validateFields = (payload, requiredFields) => {
+const validateFields = (
+  payload: Record<string, any> | null | undefined,
+  requiredFields: string[],
+): void => {
   if (!payload)
     throw new ApiError(status.BAD_REQUEST, `Request body is required`);
 
@@ -10,4 +13,4 @@ const validateFields = (payload, requiredFields) => {
       throw new ApiError(status.BAD_REQUEST, `${field} is required`);
 };
 
-module.exports = validateFields;
+export = validateFields;
