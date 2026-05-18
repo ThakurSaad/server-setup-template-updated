@@ -1,7 +1,14 @@
-const createErrorMessage = require("../util/createErrorMessage");
+import { MulterError } from "multer";
+import createErrorMessage from "../util/createErrorMessage";
 
-const handleMulterError = (err) => {
-  let message;
+interface IMulterErrorResponse {
+  statusCode: number;
+  message: string;
+  errorMessages: ReturnType<typeof createErrorMessage>;
+}
+
+const handleMulterError = (err: MulterError): IMulterErrorResponse => {
+  let message: string;
   const { code, field, message: defaultMsg } = err;
 
   switch (code) {
@@ -50,4 +57,4 @@ const handleMulterError = (err) => {
   };
 };
 
-module.exports = handleMulterError;
+export = handleMulterError;

@@ -1,5 +1,7 @@
+import { Request, Response } from "express";
+
 class NotFoundHandler {
-  static handle(req, res) {
+  static handle(req: Request, res: Response) {
     return res.status(404).json({
       success: false,
       message: "Not Found",
@@ -13,4 +15,4 @@ class NotFoundHandler {
   }
 }
 
-module.exports = NotFoundHandler;
+export = NotFoundHandler;
