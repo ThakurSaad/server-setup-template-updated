@@ -1,5 +1,5 @@
 const { default: status } = require("http-status");
-const ApiError = require("../error/ApiError");
+import ApiError from "../error/ApiError";
 
 // List of Stripe-supported currencies
 const stripeCurrencies = new Set([
@@ -140,14 +140,11 @@ const stripeCurrencies = new Set([
 ]);
 
 // Function to validate currency
-const stripeCurrencyValidator = (currency) => {
-  if (typeof currency !== "string")
-    throw new ApiError(status.BAD_REQUEST, "Currency type must be string");
-
+const stripeCurrencyValidator = (currency: string) => {
   if (!stripeCurrencies.has(currency.toLowerCase()))
     throw new ApiError(status.BAD_REQUEST, "Invalid currency");
 
   return true;
 };
 
-module.exports = stripeCurrencyValidator;
+export = stripeCurrencyValidator;

@@ -1,5 +1,6 @@
 const { default: status } = require("http-status");
-const emitError = require("../socket/emitError");
+import { Socket } from "socket.io";
+import emitError from "../socket/emitError";
 
 /**
  * Validates required fields in socket event payloads
@@ -9,7 +10,11 @@ const emitError = require("../socket/emitError");
  * @param {Array} requiredFields - Array of field names that are required
  * @param {Object} socket - Socket.io socket instance for error emission
  */
-const validateSocketFields = (socket, payload, requiredFields) => {
+const validateSocketFields = (
+  socket: Socket,
+  payload: Record<string, unknown>,
+  requiredFields: string[],
+): void => {
   if (!payload) {
     emitError(socket, status.BAD_REQUEST, "Request payload is required");
   }
@@ -25,4 +30,4 @@ const validateSocketFields = (socket, payload, requiredFields) => {
   }
 };
 
-module.exports = validateSocketFields;
+export = validateSocketFields;
