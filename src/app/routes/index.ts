@@ -7,6 +7,7 @@ import ManageRoutes from "../module/manage/manage.routes";
 import NotificationRoutes from "../module/notification/notification.routes";
 import FeedbackRoutes from "../module/feedback/feedback.routes";
 import ReviewRoutes from "../module/review/review.routes";
+import ChatRoutes from "../module/chat/chat.routes";
 
 const router = express.Router();
 // const express = require("express");
@@ -53,6 +54,10 @@ const moduleRoutes = [
     path: "/review",
     route: ReviewRoutes,
   },
+  {
+    path: "/chat",
+    route: ChatRoutes,
+  }
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));

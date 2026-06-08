@@ -28,6 +28,20 @@ const UserSchema = new Schema<IUser>(
     address: {
       type: String,
     },
+    isOnline: {
+      type: Boolean,
+      default: false,
+    },
+    locationCoordinates: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number],
+      },
+    },
   },
   {
     timestamps: true,
@@ -36,4 +50,4 @@ const UserSchema = new Schema<IUser>(
 
 const User = model<IUser>("User", UserSchema);
 
-export default User;
+export = User;

@@ -1,7 +1,7 @@
-const { errorLogger, logger } = require("./util/logger");
-const connectDB = require("./connection/connectDB");
-const config = require("./config");
-const mainServer = require("./connection/socket");
+import { logger, errorLogger } from "./util/logger";
+import connectDB from "./connection/connectDB";
+import config from "./config";
+import mainServer from "./connection/socket";
 
 async function main() {
   try {
