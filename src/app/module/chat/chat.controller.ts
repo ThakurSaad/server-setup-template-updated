@@ -1,8 +1,9 @@
-const ChatService = require("./chat.service");
-const sendResponse = require("../../../util/sendResponse");
-const catchAsync = require("../../../util/catchAsync");
+import { Request, Response } from "express";
+import {ChatService} from "./chat.service";
+import sendResponse from "../../../util/sendResponse";
+import catchAsync from "../../../util/catchAsync";
 
-const postChat = catchAsync(async (req, res) => {
+const postChat = catchAsync(async (req: Request, res: Response) => {
   const result = await ChatService.postChat(req.user, req.body);
   sendResponse(res, {
     statusCode: 200,
@@ -12,7 +13,7 @@ const postChat = catchAsync(async (req, res) => {
   });
 });
 
-const getChatMessages = catchAsync(async (req, res) => {
+const getChatMessages = catchAsync(async (req: Request, res: Response) => {
   const result = await ChatService.getChatMessages(req.user, req.query);
   sendResponse(res, {
     statusCode: 200,
@@ -22,7 +23,7 @@ const getChatMessages = catchAsync(async (req, res) => {
   });
 });
 
-const getAllChats = catchAsync(async (req, res) => {
+const getAllChats = catchAsync(async (req: Request, res: Response) => {
   const result = await ChatService.getAllChats(req.user, req.query);
   sendResponse(res, {
     statusCode: 200,
@@ -32,7 +33,7 @@ const getAllChats = catchAsync(async (req, res) => {
   });
 });
 
-const updateMessageAsSeen = catchAsync(async (req, res) => {
+const updateMessageAsSeen = catchAsync(async (req: Request, res: Response) => {
   const result = await ChatService.updateMessageAsSeen(req.user, req.body);
   sendResponse(res, {
     statusCode: 200,
@@ -49,4 +50,4 @@ const ChatController = {
   updateMessageAsSeen,
 };
 
-module.exports = ChatController;
+export {ChatController};

@@ -8,6 +8,12 @@ export interface IUser extends Document {
   phoneNumber?: string;
   dateOfBirth?: string;
   address?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  isOnline?: boolean;
+  locationCoordinates?: {
+    type: {
+      type: string;
+      enum: ["Point"];
+    };
+    coordinates: [number, number];
+  };
 }

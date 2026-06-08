@@ -10,10 +10,14 @@ const postNotification = async (
     throw new Error("Missing required fields: title, or message");
   }
 
-  if (!toId) {
-    await AdminNotification.create({ title, message });
-  } else {
-    await Notification.create({ toId, title, message });
+  try {
+    if (!toId) {
+      await AdminNotification.create({ title, message });
+    } else {
+      await Notification.create({ toId, title, message });
+    }
+  } catch (error) {
+    console.error("Failed to post notification:", error);
   }
 };
 

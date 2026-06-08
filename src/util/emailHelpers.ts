@@ -1,17 +1,10 @@
 const { default: status } = require("http-status");
 
-// import status from "http-status";
 import ApiError from "../error/ApiError";
 import otpResendTemp from "../mail/otpResendTemp";
 import resetPassEmailTemp from "../mail/resetPassEmailTemp";
 import signUpEmailTemp from "../mail/signUpEmailTemp";
 import { sendEmail } from "../util/sendEmail";
-
-// const ApiError = require("../error/ApiError");
-// const otpResendTemp = require("../mail/otpResendTemp");
-// const resetPassEmailTemp = require("../mail/resetPassEmailTemp");
-// const signUpEmailTemp = require("../mail/signUpEmailTemp");
-// const { sendEmail } = require("../util/sendEmail");
 
 const sendActivationEmail = async (
   email: string,

@@ -3,4 +3,4 @@ const socketCors = {
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
 };
 
-module.exports = socketCors;
+export = socketCors;

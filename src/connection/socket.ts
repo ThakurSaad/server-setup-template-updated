@@ -1,10 +1,9 @@
-const http = require("http");
-const { Server } = require("socket.io");
-
-const app = require("../app");
-const socketHandlers = require("../socket/socketHandlers");
-const socketCors = require("./socketCors");
-const { EnumSocketEvent } = require("../util/enum");
+import http from "http";
+import { Server } from "socket.io";
+import app from "../app";
+import socketHandlers from "../socket/socketHandlers";
+import socketCors from "./socketCors";
+import { EnumSocketEvent } from "../util/enum";
 
 const mainServer = http.createServer(app);
 
@@ -13,7 +12,7 @@ const io = new Server(mainServer, {
 });
 
 io.on(EnumSocketEvent.CONNECTION, (socket) => {
-  socketHandlers(socket, io);
+  socketHandlers(socket, io, {});
 });
 
-module.exports = mainServer;
+export = mainServer;

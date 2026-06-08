@@ -1,5 +1,5 @@
-const nodemailer = require("nodemailer");
-const config = require("../config");
+import nodemailer from "nodemailer";
+import config from "../config";
 
 const currentDate = new Date();
 

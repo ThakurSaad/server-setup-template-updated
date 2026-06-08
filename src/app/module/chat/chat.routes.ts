@@ -1,7 +1,7 @@
-const express = require("express");
-const auth = require("../../middleware/auth");
-const config = require("../../../config");
-const ChatController = require("./chat.controller");
+import express from "express";
+import auth from "../../middleware/auth";
+import config from "../../../config";
+import {ChatController} from "./chat.controller";
 
 const router = express.Router();
 
@@ -10,17 +10,17 @@ router
   .get(
     "/get-chat-messages",
     auth(config.auth_level.user),
-    ChatController.getChatMessages
+    ChatController.getChatMessages,
   )
   .get(
     "/get-all-chats",
     auth(config.auth_level.user),
-    ChatController.getAllChats
+    ChatController.getAllChats,
   )
   .patch(
     "/update-message-as-seen",
     auth(config.auth_level.user),
-    ChatController.updateMessageAsSeen
+    ChatController.updateMessageAsSeen,
   );
 
-module.exports = router;
+export = router;

@@ -1,5 +1,5 @@
-const fs = require("fs");
-const chalk = require("chalk");
+import fs from "fs";
+import chalk from "chalk";
 
 const deleteUploadedFiles = (uploadedFiles?: string[]): void => {
   if (!uploadedFiles || uploadedFiles.length === 0) return;

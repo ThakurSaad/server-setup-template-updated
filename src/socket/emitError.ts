@@ -1,20 +1,22 @@
 const { default: status } = require("http-status");
-const { EnumSocketEvent } = require("../util/enum");
+import chalk from "chalk";
+import { EnumSocketEvent } from "../util/enum";
+import { Socket } from "socket.io";
 
 const emitError = (
-  socket,
+  socket: Socket,
   statusCode = status.INTERNAL_SERVER_ERROR,
   message = "Internal sever error",
-  disconnect
-) => {
+  disconnect?: string,
+): never => {
   socket.emit(EnumSocketEvent.SOCKET_ERROR, { status: statusCode, message });
 
   if (disconnect) {
     socket.disconnect(true);
-    console.log("disconnected because of error");
+    console.log(chalk.red("💀 disconnected because of error"));
   }
 
   throw new Error(message);
 };
 
-module.exports = emitError;
+export = emitError;
