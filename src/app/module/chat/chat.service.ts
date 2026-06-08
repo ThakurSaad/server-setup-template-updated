@@ -1,16 +1,19 @@
-const { default: status } = require("http-status");
-const Chat = require("./Chat");
-const QueryBuilder = require("../../../builder/queryBuilder");
-const ApiError = require("../../../error/ApiError");
-const validateFields = require("../../../util/validateFields");
-const postNotification = require("../../../util/postNotification");
-const User = require("../user/User");
-const { default: mongoose } = require("mongoose");
-const Message = require("./Message");
+const status = require("http-status");
+import Chat from "./Chat";
+import ApiError from "../../../error/ApiError";
+import validateFields from "../../../util/validateFields";
+import postNotification from "../../../util/postNotification";
+import User from "../user/User";
+import mongoose from "mongoose";
+import Message from "./Message";
+import { AuthUserPayload } from "../../../types/auth.types";
 
-const postChat = async (userData, payload) => {
-  const { userId } = userData;
-  const { receiverId } = payload;
+const postChat = async (
+  userData: AuthUserPayload,
+  payload: Record<string, unknown>,
+) => {
+  const userId = String(userData.userId);
+  const receiverId = String(payload.receiverId);
 
   validateFields(payload, ["receiverId"]);
 
@@ -22,9 +25,15 @@ const postChat = async (userData, payload) => {
     }),
   ]);
 
-  if (!user) throw new ApiError(status.NOT_FOUND, "User not found");
-  if (!receiver) throw new ApiError(status.NOT_FOUND, "Receiver not found");
-  if (existingChat) return existingChat;
+  if (!user) {
+    throw new ApiError(status.NOT_FOUND, "User not found");
+  }
+  if (!receiver) {
+    throw new ApiError(status.NOT_FOUND, "Receiver not found");
+  }
+  if (existingChat) {
+    return existingChat;
+  }
 
   const newChat = await Chat.create({
     participants: [userId, receiverId],
@@ -34,18 +43,21 @@ const postChat = async (userData, payload) => {
   postNotification(
     "New message",
     "You have started a new conversation",
-    receiverId
+    receiverId,
   );
   postNotification(
     "New message",
     "You have started a new conversation",
-    userId
+    userId,
   );
 
   return newChat;
 };
 
-const getChatMessages = async (userData, query) => {
+const getChatMessages = async (
+  userData: AuthUserPayload,
+  query: Record<string, unknown>,
+) => {
   validateFields(query, ["chatId"]);
 
   const chat = await Chat.findOne({
@@ -64,7 +76,10 @@ const getChatMessages = async (userData, query) => {
   return chat;
 };
 
-const getAllChats = async (userData, query) => {
+const getAllChats = async (
+  userData: AuthUserPayload,
+  query: Record<string, unknown>,
+) => {
   const userId = mongoose.Types.ObjectId.createFromHexString(userData.userId);
 
   const chats = await Chat.aggregate([
@@ -123,7 +138,10 @@ const getAllChats = async (userData, query) => {
   };
 };
 
-const updateMessageAsSeen = async (userData, payload) => {
+const updateMessageAsSeen = async (
+  userData: AuthUserPayload,
+  payload: Record<string, unknown>,
+) => {
   /**
    * Updates all unread messages in a chat as seen for the logged-in user
    * Meaning update unread messages where the logged-in user is the receiver
@@ -134,7 +152,9 @@ const updateMessageAsSeen = async (userData, payload) => {
 
   const chat = await Chat.findById(payload.chatId).lean();
 
-  if (!chat) throw new ApiError(status.NOT_FOUND, "Chat not found");
+  if (!chat) {
+    throw new ApiError(status.NOT_FOUND, "Chat not found");
+  }
 
   const result = await Message.updateMany(
     {
@@ -143,8 +163,10 @@ const updateMessageAsSeen = async (userData, payload) => {
       isRead: false,
     },
     {
-      $set: { isRead: true },
-    }
+      $set: {
+        isRead: true,
+      },
+    },
   );
 
   return result;
@@ -157,4 +179,4 @@ const ChatService = {
   updateMessageAsSeen,
 };
 
-module.exports = ChatService;
+export { ChatService };
