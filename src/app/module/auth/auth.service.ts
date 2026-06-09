@@ -16,7 +16,6 @@ import EmailHelpers from "../../../util/emailHelpers";
 import { AuthUserPayload } from "../../../types/auth.types";
 import { logger } from "../../../util/logger";
 
-
 const registrationAccount = async (payload: {
   role: string;
   name: string;

@@ -10,6 +10,7 @@
     "dev:js": "nodemon src/server.js",
     "clean": "rimraf dist",
     "build": "npm run clean && tsc -p tsconfig.json",
+    "test": "npm run build",
     "build2": "tsc",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "memory-usage": "node --trace_gc src/server.js",

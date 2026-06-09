@@ -1,10 +1,10 @@
-const mongoose = require("mongoose");
-const { Schema, model, Types } = mongoose;
+import { Schema, model } from "mongoose";
+import type { IAdmin } from "./admin.interface";
 
-const AdminSchema = new Schema(
+const AdminSchema = new Schema<IAdmin>(
   {
     authId: {
-      type: Types.ObjectId,
+      type: Schema.Types.ObjectId,
       required: true,
       ref: "Auth",
     },
@@ -28,9 +28,9 @@ const AdminSchema = new Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const Admin = model("Admin", AdminSchema);
+const Admin = model<IAdmin>("Admin", AdminSchema);
 
-module.exports = Admin;
+export = Admin;

@@ -20,11 +20,10 @@ const updateProfile = async (req: Request) => {
   deleteFalsyField(data);
   const existingUser = await User.findById(userId).lean();
 
+  let hasNewImage = false;
   if (files && files.profile_image) {
-    if (existingUser.profile_image) {
-      unlinkFile(existingUser.profile_image);
-    }
     updateData.profile_image = files.profile_image[0].path;
+    hasNewImage = true;
   }
 
   const [auth, user] = await Promise.all([
@@ -45,6 +44,10 @@ const updateProfile = async (req: Request) => {
   ]);
 
   if (!auth || !user) throw new ApiError(status.NOT_FOUND, "User not found!");
+
+  if (hasNewImage && existingUser && existingUser.profile_image) {
+    unlinkFile(existingUser.profile_image);
+  }
 
   return user;
 };

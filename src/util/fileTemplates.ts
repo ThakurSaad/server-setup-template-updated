@@ -194,7 +194,7 @@ const serviceTemplate = (moduleName) => {
   `;
 };
 
-module.exports = {
+export = {
   modelTemplate,
   controllerTemplate,
   routesTemplate,

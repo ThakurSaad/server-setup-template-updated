@@ -1,8 +1,9 @@
-const sendResponse = require("../../../util/sendResponse");
-const { AdminService } = require("./admin.service");
-const catchAsync = require("../../../util/catchAsync");
+import sendResponse from "../../../util/sendResponse";
+import { AdminService } from "./admin.service";
+import catchAsync from "../../../util/catchAsync";
+import { Request, Response } from "express";
 
-const updateProfile = catchAsync(async (req, res) => {
+const updateProfile = catchAsync(async (req: Request, res: Response) => {
   const result = await AdminService.updateProfile(req);
   sendResponse(res, {
     statusCode: 200,
@@ -12,7 +13,7 @@ const updateProfile = catchAsync(async (req, res) => {
   });
 });
 
-const getProfile = catchAsync(async (req, res) => {
+const getProfile = catchAsync(async (req: Request, res: Response) => {
   const result = await AdminService.getProfile(req.user);
   sendResponse(res, {
     statusCode: 200,
@@ -22,7 +23,7 @@ const getProfile = catchAsync(async (req, res) => {
   });
 });
 
-const deleteMyAccount = catchAsync(async (req, res) => {
+const deleteMyAccount = catchAsync(async (req: Request, res: Response) => {
   await AdminService.deleteMyAccount(req.body);
   sendResponse(res, {
     statusCode: 200,
@@ -37,4 +38,4 @@ const AdminController = {
   deleteMyAccount,
 };
 
-module.exports = { AdminController };
+export { AdminController };
