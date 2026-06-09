@@ -1,9 +1,11 @@
-const ReviewService = require("./review.service");
-const sendResponse = require("../../../util/sendResponse");
-const catchAsync = require("../../../util/catchAsync");
+import { Request, Response } from "express";
+import { ReviewService } from "./review.service";
+import sendResponse from "../../../util/sendResponse";
+import catchAsync from "../../../util/catchAsync";
+import { QueryParams } from "../../../builder/queryBuilder";
 
-const postReview = catchAsync(async (req, res) => {
-  const result = await ReviewService.postReview(req.user, req.body);
+const postReview = catchAsync(async (req: Request, res: Response) => {
+  const result = await ReviewService.postReview();
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -12,8 +14,11 @@ const postReview = catchAsync(async (req, res) => {
   });
 });
 
-const getAllReviews = catchAsync(async (req, res) => {
-  const result = await ReviewService.getAllReviews(req.user, req.query);
+const getAllReviews = catchAsync(async (req: Request, res: Response) => {
+  const result = await ReviewService.getAllReviews(
+    req.user,
+    req.query as QueryParams,
+  );
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -22,7 +27,7 @@ const getAllReviews = catchAsync(async (req, res) => {
   });
 });
 
-const getReview = catchAsync(async (req, res) => {
+const getReview = catchAsync(async (req: Request, res: Response) => {
   const result = await ReviewService.getReview(req.user, req.query);
   sendResponse(res, {
     statusCode: 200,
@@ -32,7 +37,7 @@ const getReview = catchAsync(async (req, res) => {
   });
 });
 
-const updateReview = catchAsync(async (req, res) => {
+const updateReview = catchAsync(async (req: Request, res: Response) => {
   const result = await ReviewService.updateReview(req.user, req.body);
   sendResponse(res, {
     statusCode: 200,
@@ -42,7 +47,7 @@ const updateReview = catchAsync(async (req, res) => {
   });
 });
 
-const deleteReview = catchAsync(async (req, res) => {
+const deleteReview = catchAsync(async (req: Request, res: Response) => {
   const result = await ReviewService.deleteReview(req.user, req.query);
   sendResponse(res, {
     statusCode: 200,
@@ -60,4 +65,4 @@ const ReviewController = {
   deleteReview,
 };
 
-module.exports = ReviewController;
+export { ReviewController };
