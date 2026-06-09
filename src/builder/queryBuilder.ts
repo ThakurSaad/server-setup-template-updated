@@ -69,4 +69,4 @@ class QueryBuilder {
   }
 }
 
-module.exports = QueryBuilder;
+export = QueryBuilder;
