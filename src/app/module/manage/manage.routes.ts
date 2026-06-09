@@ -1,61 +1,65 @@
-const auth = require("../../middleware/auth");
-const express = require("express");
-const ManageController = require("./manage.controller");
-const config = require("../../../config");
+import { Router } from "express";
+import auth from "../../middleware/auth";
+import { ManageController } from "./manage.controller";
+import config from "../../../config";
 
-const router = express.Router();
+const router = Router();
 
 router
   .post(
     "/add-terms-conditions",
     auth(config.auth_level.admin),
-    ManageController.addTermsConditions
+    ManageController.addTermsConditions,
   )
   .get("/get-terms-conditions", ManageController.getTermsConditions)
   .delete(
     "/delete-terms-conditions",
     auth(config.auth_level.admin),
-    ManageController.deleteTermsConditions
+    ManageController.deleteTermsConditions,
   )
+
   .post(
     "/add-privacy-policy",
     auth(config.auth_level.admin),
-    ManageController.addPrivacyPolicy
+    ManageController.addPrivacyPolicy,
   )
   .get("/get-privacy-policy", ManageController.getPrivacyPolicy)
   .delete(
     "/delete-privacy-policy",
     auth(config.auth_level.admin),
-    ManageController.deletePrivacyPolicy
+    ManageController.deletePrivacyPolicy,
   )
+
   .post(
     "/add-about-us",
     auth(config.auth_level.admin),
-    ManageController.addAboutUs
+    ManageController.addAboutUs,
   )
   .get("/get-about-us", ManageController.getAboutUs)
   .delete(
     "/delete-about-us",
     auth(config.auth_level.admin),
-    ManageController.deleteAboutUs
+    ManageController.deleteAboutUs,
   )
+
   .post("/add-faq", auth(config.auth_level.admin), ManageController.addFaq)
   .get("/get-faq", ManageController.getFaq)
   .delete(
     "/delete-faq",
     auth(config.auth_level.admin),
-    ManageController.deleteFaq
+    ManageController.deleteFaq,
   )
+
   .post(
     "/add-contact-us",
     auth(config.auth_level.admin),
-    ManageController.addContactUs
+    ManageController.addContactUs,
   )
   .get("/get-contact-us", ManageController.getContactUs)
   .delete(
     "/delete-contact-us",
     auth(config.auth_level.admin),
-    ManageController.deleteContactUs
+    ManageController.deleteContactUs,
   );
 
-module.exports = router;
+export = router;

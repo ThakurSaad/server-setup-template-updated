@@ -13,7 +13,7 @@ export interface QueryParams {
 }
 
 // This describes what countTotal() returns
-interface PaginationMeta {
+export interface PaginationMeta {
   page: number;
   limit: number;
   total: number;
