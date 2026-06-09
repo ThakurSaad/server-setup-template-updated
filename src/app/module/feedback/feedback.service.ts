@@ -1,26 +1,46 @@
 const { status } = require("http-status");
+import ApiError from "../../../error/ApiError";
+import QueryBuilder, { QueryParams } from "../../../builder/queryBuilder";
+import postNotification from "../../../util/postNotification";
+import Feedback from "./Feedback";
+import User from "../user/User";
+import validateFields from "../../../util/validateFields";
+import { EnumUserRole } from "../../../util/enum";
 
-const ApiError = require("../../../error/ApiError");
-const QueryBuilder = require("../../../builder/queryBuilder");
-const postNotification = require("../../../util/postNotification");
-const Feedback = require("./Feedback");
-const User = require("../user/User");
-const validateFields = require("../../../util/validateFields");
-const { EnumUserRole } = require("../../../util/enum");
+interface UserData {
+  userId: string;
+  role: string;
+}
 
-const postFeedback = async (userData, payload) => {
+interface FeedbackPayload {
+  feedback: string;
+  name?: string;
+  email?: string;
+  feedbackId?: string;
+  reply?: string;
+}
+
+const postFeedback = async (
+  userData: UserData | null,
+  payload: FeedbackPayload,
+) => {
   validateFields(payload, ["feedback"]);
-  let user;
 
-  if (!userData) validateFields(payload, ["name", "email"]);
-  else user = await User.findById(userData.userId).lean();
+  let user: { name: string; email: string } | null = null;
+
+  if (!userData) {
+    validateFields(payload, ["name", "email"]);
+  } else {
+    user = await User.findById(userData.userId).lean();
+  }
 
   const feedbackData = {
-    ...(userData && {
-      user: userData.userId,
-      name: user.name,
-      email: user.email,
-    }),
+    ...(userData &&
+      user && {
+        user: userData.userId,
+        name: user.name,
+        email: user.email,
+      }),
     ...(!userData && {
       name: payload.name,
       email: payload.email,
@@ -30,12 +50,13 @@ const postFeedback = async (userData, payload) => {
 
   const feedback = await Feedback.create(feedbackData);
 
-  if (userData)
+  if (userData) {
     postNotification(
       "Thank You",
       "Thank you for your valuable feedback 🫡",
       userData.userId,
     );
+  }
 
   postNotification(
     "New Feedback",
@@ -45,7 +66,10 @@ const postFeedback = async (userData, payload) => {
   return feedback;
 };
 
-const getFeedback = async (userData, query) => {
+const getFeedback = async (
+  userData: UserData,
+  query: { feedbackId?: string },
+) => {
   validateFields(query, ["feedbackId"]);
 
   const feedback = await Feedback.findById(query.feedbackId);
@@ -54,7 +78,7 @@ const getFeedback = async (userData, query) => {
   return feedback;
 };
 
-const getMyFeedback = async (userData) => {
+const getMyFeedback = async (userData: UserData) => {
   const { userId } = userData;
 
   const feedback = await Feedback.find({ user: userId });
@@ -67,7 +91,7 @@ const getMyFeedback = async (userData) => {
   };
 };
 
-const getAllFeedbacks = async (userData, query) => {
+const getAllFeedbacks = async (userData: UserData, query: QueryParams) => {
   const queryObj =
     userData.role === EnumUserRole.ADMIN ? {} : { user: userData.userId };
 
@@ -83,13 +107,13 @@ const getAllFeedbacks = async (userData, query) => {
     feedbackQuery.countTotal(),
   ]);
 
-  return {
-    meta,
-    feedback,
-  };
+  return { meta, feedback };
 };
 
-const updateFeedbackWithReply = async (useData, payload) => {
+const updateFeedbackWithReply = async (
+  userData: UserData,
+  payload: FeedbackPayload,
+) => {
   validateFields(payload, ["feedbackId", "reply"]);
 
   const feedback = await Feedback.findByIdAndUpdate(
@@ -100,17 +124,18 @@ const updateFeedbackWithReply = async (useData, payload) => {
 
   if (!feedback) throw new ApiError(status.NOT_FOUND, "Feedback not found");
 
-  if (feedback.user)
+  if (feedback.user) {
     postNotification(
       "Feedback Reply",
       "Admin has replied to your feedback",
-      feedback.user,
+      String(feedback.user),
     );
+  }
 
   return feedback;
 };
 
-const deleteFeedback = async (userData, payload) => {
+const deleteFeedback = async (userData: UserData, payload: FeedbackPayload) => {
   validateFields(payload, ["feedbackId"]);
 
   const result = await Feedback.deleteOne({ _id: payload.feedbackId });
@@ -130,4 +155,4 @@ const FeedbackService = {
   deleteFeedback,
 };
 
-module.exports = { FeedbackService };
+export { FeedbackService };
