@@ -1,11 +1,11 @@
-const fs = require("fs");
-const path = require("path");
-const {
+import fs from "fs";
+import path from "path";
+import {
   modelTemplate,
   controllerTemplate,
   routesTemplate,
   serviceTemplate,
-} = require("./fileTemplates");
+} from "./fileTemplates.js";
 
 // Function to create a new module
 const generateModule = (moduleName) => {
@@ -19,25 +19,25 @@ const generateModule = (moduleName) => {
     // model
     fs.writeFileSync(
       path.join(dirPath, `${moduleName}.js`),
-      `${modelTemplate(moduleName)}`
+      `${modelTemplate(moduleName)}`,
     );
 
     // controller
     fs.writeFileSync(
       path.join(dirPath, `${moduleName.toLowerCase()}.controller.js`),
-      `${controllerTemplate(moduleName)}`
+      `${controllerTemplate(moduleName)}`,
     );
 
     // routes
     fs.writeFileSync(
       path.join(dirPath, `${moduleName.toLowerCase()}.routes.js`),
-      `${routesTemplate(moduleName)}`
+      `${routesTemplate(moduleName)}`,
     );
 
     // service
     fs.writeFileSync(
       path.join(dirPath, `${moduleName.toLowerCase()}.service.js`),
-      `${serviceTemplate(moduleName)}`
+      `${serviceTemplate(moduleName)}`,
     );
 
     console.log(`✅ ${moduleName} module files created successfully!`);

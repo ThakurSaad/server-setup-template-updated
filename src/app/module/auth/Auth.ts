@@ -2,13 +2,14 @@ import { Schema, Types, model, type Model } from "mongoose";
 import bcrypt from "bcrypt";
 import validator from "validator";
 import config from "../../../config";
+import { EnumUserRole } from "../../../util/enum";
 
 interface IAuth {
   _id: Types.ObjectId;
   name: string;
   email: string;
   password: string;
-  role: "USER" | "ADMIN";
+  role: string;
   isVerified?: boolean;
   isBlocked?: boolean;
   isActive?: boolean;
@@ -48,7 +49,7 @@ const AuthSchema = new Schema<IAuth, AuthModel>(
     },
     role: {
       type: String,
-      enum: ["USER", "ADMIN"],
+      enum: Object.values(EnumUserRole),
       required: true,
     },
     isVerified: {
