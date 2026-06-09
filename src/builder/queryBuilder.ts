@@ -3,7 +3,7 @@ import { Model, Query } from "mongoose";
 // This describes the shape of the query parameters coming from the URL
 // (e.g. ?searchTerm=john&sort=name&page=2&limit=10&fields=name,email)
 // All fields are optional because the user may or may not include them
-interface QueryParams {
+export interface QueryParams {
   searchTerm?: string;
   sort?: string;
   limit?: string;
@@ -28,8 +28,7 @@ class QueryBuilder<T> {
 
   // query holds the parsed URL query parameters (e.g. req.query)
   query: QueryParams;
-
-  constructor(modelQuery: Query<T[], T>, query: QueryParams) {
+  constructor(modelQuery: Query<any[], T>, query: QueryParams) {
     this.modelQuery = modelQuery;
     this.query = query;
   }

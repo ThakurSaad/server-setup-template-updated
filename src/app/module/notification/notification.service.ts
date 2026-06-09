@@ -1,12 +1,14 @@
 const status = require("http-status");
 // import { default: status } from "http-status";
-import QueryBuilder from "../../../builder/queryBuilder";
+import QueryBuilder, { QueryParams } from "../../../builder/queryBuilder";
 import ApiError from "../../../error/ApiError";
 import validateFields from "../../../util/validateFields";
 import { EnumUserRole } from "../../../util/enum";
 import AdminNotification from "./AdminNotification";
 import Notification from "./Notification";
 import { AuthUserPayload } from "../../../types/auth.types";
+import { IAdminNotification } from "./AdminNotification.interface";
+import { INotification } from "./Notification.interface";
 
 const getNotification = async (
   userData: AuthUserPayload,
@@ -40,34 +42,53 @@ const getNotification = async (
  */
 const getAllNotifications = async (
   userData: AuthUserPayload,
-  query: Record<string, unknown>,
+  query: QueryParams,
 ) => {
   const { role, userId } = userData;
-  const baseQuery =
-    role === EnumUserRole.ADMIN
-      ? AdminNotification.find()
-      : Notification.find({ toId: userId });
 
-  const notificationQuery = new QueryBuilder(baseQuery.lean(), query)
-    .search([])
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  if (role === EnumUserRole.ADMIN) {
+    const notificationQuery = new QueryBuilder<IAdminNotification>(
+      AdminNotification.find().lean(),
+      query,
+    )
+      .search([])
+      .filter()
+      .sort()
+      .paginate()
+      .fields();
 
-  const [notifications, meta] = await Promise.all([
-    notificationQuery.modelQuery,
-    notificationQuery.countTotal(),
-  ]);
+    const [notifications, meta] = await Promise.all([
+      notificationQuery.modelQuery,
+      notificationQuery.countTotal(),
+    ]);
 
-  if (!notifications) {
-    throw new ApiError(status.NOT_FOUND, "Notifications not found");
+    if (!notifications) {
+      throw new ApiError(status.NOT_FOUND, "Notifications not found");
+    }
+
+    return { meta, notifications };
+  } else {
+    const notificationQuery = new QueryBuilder<INotification>(
+      Notification.find({ toId: userId }).lean(),
+      query,
+    )
+      .search([])
+      .filter()
+      .sort()
+      .paginate()
+      .fields();
+
+    const [notifications, meta] = await Promise.all([
+      notificationQuery.modelQuery,
+      notificationQuery.countTotal(),
+    ]);
+
+    if (!notifications) {
+      throw new ApiError(status.NOT_FOUND, "Notifications not found");
+    }
+
+    return { meta, notifications };
   }
-
-  return {
-    meta,
-    notifications,
-  };
 };
 
 const updateAsReadUnread = async (
