@@ -2,6 +2,7 @@ import { NotificationService } from "./notification.service";
 import sendResponse from "../../../util/sendResponse";
 import catchAsync from "../../../util/catchAsync";
 import type { Request, Response } from "express";
+import { QueryParams } from "../../../builder/queryBuilder";
 
 const getNotification = catchAsync(async (req: Request, res: Response) => {
   const result = await NotificationService.getNotification(req.user, req.query);
@@ -16,7 +17,7 @@ const getNotification = catchAsync(async (req: Request, res: Response) => {
 const getAllNotifications = catchAsync(async (req: Request, res: Response) => {
   const result = await NotificationService.getAllNotifications(
     req.user,
-    req.query,
+    req.query as QueryParams,
   );
   sendResponse(res, {
     statusCode: 200,
