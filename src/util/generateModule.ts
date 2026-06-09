@@ -5,39 +5,33 @@ import {
   controllerTemplate,
   routesTemplate,
   serviceTemplate,
-} from "./fileTemplates.js";
+} from "./fileTemplates";
 
-// Function to create a new module
-const generateModule = (moduleName) => {
-  const dirPath = path.join(__dirname, moduleName);
+const generateModule = (moduleName: string): void => {
+  const moduleFolder = moduleName.toLowerCase();
+  const dirPath = path.join(__dirname, moduleFolder);
 
-  // Check if the directory exists
   if (!fs.existsSync(dirPath)) {
-    // Create the module directory
-    fs.mkdirSync(dirPath.toLowerCase(), { recursive: true });
+    fs.mkdirSync(dirPath, { recursive: true });
 
-    // model
     fs.writeFileSync(
-      path.join(dirPath, `${moduleName}.js`),
-      `${modelTemplate(moduleName)}`,
+      path.join(dirPath, `${moduleName}.ts`),
+      modelTemplate(moduleName),
     );
 
-    // controller
     fs.writeFileSync(
-      path.join(dirPath, `${moduleName.toLowerCase()}.controller.js`),
-      `${controllerTemplate(moduleName)}`,
+      path.join(dirPath, `${moduleFolder}.controller.ts`),
+      controllerTemplate(moduleName),
     );
 
-    // routes
     fs.writeFileSync(
-      path.join(dirPath, `${moduleName.toLowerCase()}.routes.js`),
-      `${routesTemplate(moduleName)}`,
+      path.join(dirPath, `${moduleFolder}.routes.ts`),
+      routesTemplate(moduleName),
     );
 
-    // service
     fs.writeFileSync(
-      path.join(dirPath, `${moduleName.toLowerCase()}.service.js`),
-      `${serviceTemplate(moduleName)}`,
+      path.join(dirPath, `${moduleFolder}.service.ts`),
+      serviceTemplate(moduleName),
     );
 
     console.log(`✅ ${moduleName} module files created successfully!`);
@@ -46,6 +40,6 @@ const generateModule = (moduleName) => {
   }
 };
 
-// Specify the module name
 const moduleName = "Test";
+
 generateModule(moduleName);

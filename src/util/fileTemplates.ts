@@ -1,202 +1,235 @@
-// Template for controller file
-const modelTemplate = (moduleName) => {
+// fileTemplates.ts
+
+export const modelTemplate = (moduleName: string): string => {
   const moduleNameLowerCase = moduleName.toLowerCase();
 
   return `
-    const { Schema, model } = require("mongoose");
-    const ObjectId = Schema.Types.ObjectId;
+import { Schema, model } from "mongoose";
 
-    const ${moduleNameLowerCase}Schema = new Schema(
-    {
-        
-    },
-    {
-        timestamps: true,
-    }
-    );
-
-    const ${moduleName} = model("${moduleName}", ${moduleNameLowerCase}Schema);
-
-    module.exports = ${moduleName};
-    `;
-};
-
-// Template for controller file
-const controllerTemplate = (moduleName) => {
-  const moduleNameLowerCase = moduleName.toLowerCase();
-
-  return `
-    const ${moduleName}Service = require("./${moduleNameLowerCase}.service");
-    const sendResponse = require("../../../util/sendResponse");
-    const catchAsync = require("../../../util/catchAsync");
-
-    const create${moduleName} = catchAsync(async (req, res) => {
-    const result = await ${moduleName}Service.create${moduleName}(req.user, req.body);
-    sendResponse(res, {
-        statusCode: 200,
-        success: true,
-        message: "${moduleName} created",
-        data: result,
-    });
-    });
-
-    const get${moduleName} = catchAsync(async (req, res) => {
-    const result = await ${moduleName}Service.get${moduleName}(req.user, req.query);
-    sendResponse(res, {
-        statusCode: 200,
-        success: true,
-        message: "${moduleName} retrieved",
-        data: result,
-    });
-    });
-
-    const getAll${moduleName}s = catchAsync(async (req, res) => {
-    const result = await ${moduleName}Service.getAll${moduleName}s(req.user, req.query);
-    sendResponse(res, {
-        statusCode: 200,
-        success: true,
-        message: "${moduleName}s retrieved",
-        data: result,
-    });
-    });
-
-    const update${moduleName} = catchAsync(async (req, res) => {
-    const result = await ${moduleName}Service.update${moduleName}(req.user, req.body);
-    sendResponse(res, {
-        statusCode: 200,
-        success: true,
-        message: "${moduleName} updated",
-        data: result,
-    });
-    });
-
-    const delete${moduleName} = catchAsync(async (req, res) => {
-    const result = await ${moduleName}Service.delete${moduleName}(req.user, req.body);
-    sendResponse(res, {
-        statusCode: 200,
-        success: true,
-        message: "${moduleName} deleted",
-        data: result,
-    });
-    });
-
-    const ${moduleName}Controller = {
-    create${moduleName},
-    get${moduleName},
-    getAll${moduleName}s,
-    update${moduleName},
-    delete${moduleName},
-    };
-
-    module.exports = ${moduleName}Controller;
-  `;
-};
-
-// Template for routes file
-const routesTemplate = (moduleName) => {
-  const moduleNameLowerCase = moduleName.toLowerCase();
-
-  return `
-    const express = require("express");
-    const auth = require("../../middleware/auth");
-    const config = require("../../../config");
-    const ${moduleName}Controller = require("./${moduleNameLowerCase}.controller");
-
-    const router = express.Router();
+const ${moduleNameLowerCase}Schema = new Schema(
+  {
     
-    router
-        .post("/post-${moduleNameLowerCase}", auth(config.auth_level.user), ${moduleName}Controller.post${moduleName})
-        .get("/get-${moduleNameLowerCase}", auth(config.auth_level.user), ${moduleName}Controller.get${moduleName})
-        .get("/get-all-${moduleNameLowerCase}s", auth(config.auth_level.user), ${moduleName}Controller.getAll${moduleName}s)
-        .patch("/update-${moduleNameLowerCase}", auth(config.auth_level.user), ${moduleName}Controller.getAll${moduleName}s)
-        .delete("/delete-${moduleNameLowerCase}", auth(config.auth_level.user), ${moduleName}Controller.delete${moduleName});
+  },
+  {
+    timestamps: true,
+  }
+);
 
-    module.exports = router;
-  `;
+export const ${moduleName} = model("${moduleName}", ${moduleNameLowerCase}Schema);
+`;
 };
 
-// Template for service file
-const serviceTemplate = (moduleName) => {
+export const controllerTemplate = (moduleName: string): string => {
   const moduleNameLowerCase = moduleName.toLowerCase();
 
   return `
-    const { default: status } = require("http-status");  
-    const ${moduleName} = require("./${moduleName}");
-    const QueryBuilder = require("../../../builder/queryBuilder");
-    const ApiError = require("../../../error/ApiError");
-    const validateFields = require("../../../util/validateFields");
+import { Request, Response } from "express";
+import ${moduleName}Service from "./${moduleNameLowerCase}.service";
+import sendResponse from "../../../util/sendResponse";
+import catchAsync from "../../../util/catchAsync";
 
-    const post${moduleName} = async (userData, payload) => {
-    // Add your logic here
-    };
+const create${moduleName} = catchAsync(async (req: Request, res: Response) => {
+  const result = await ${moduleName}Service.create${moduleName}(req.user, req.body);
 
-    const get${moduleName} = async (userData, query) => {
-        validateFields(query, ["${moduleNameLowerCase}Id"]);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "${moduleName} created",
+    data: result,
+  });
+});
 
-        const ${moduleNameLowerCase} = await ${moduleName}.findOne({
-        _id: query.${moduleNameLowerCase}Id,
-        }).lean();
+const get${moduleName} = catchAsync(async (req: Request, res: Response) => {
+  const result = await ${moduleName}Service.get${moduleName}(req.user, req.query);
 
-        if (!${moduleNameLowerCase})
-        throw new ApiError(status.NOT_FOUND, "${moduleName} not found");
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "${moduleName} retrieved",
+    data: result,
+  });
+});
 
-        return ${moduleNameLowerCase};
-    };
+const getAll${moduleName}s = catchAsync(async (req: Request, res: Response) => {
+  const result = await ${moduleName}Service.getAll${moduleName}s(req.user, req.query);
 
-    const getAll${moduleName}s = async (userData, query) => {
-        const ${moduleNameLowerCase}Query = new QueryBuilder(
-        ${moduleName}.find({}).lean(),
-        query
-        )
-        .search([])
-        .filter()
-        .sort()
-        .paginate()
-        .fields();
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "${moduleName}s retrieved",
+    data: result,
+  });
+});
 
-        const [${moduleNameLowerCase}, meta] = await Promise.all([
-        ${moduleNameLowerCase}Query.modelQuery,
-        ${moduleNameLowerCase}Query.countTotal(),
-        ]);
+const update${moduleName} = catchAsync(async (req: Request, res: Response) => {
+  const result = await ${moduleName}Service.update${moduleName}(req.user, req.body);
 
-        return {
-        meta,
-        ${moduleNameLowerCase}s,
-        };
-    };
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "${moduleName} updated",
+    data: result,
+  });
+});
 
-    const update${moduleName} = async (userData, payload) => {
-    // Add your logic here
-    };
+const delete${moduleName} = catchAsync(async (req: Request, res: Response) => {
+  const result = await ${moduleName}Service.delete${moduleName}(req.user, req.body);
 
-    const delete${moduleName} = async (userData, payload) => {
-        validateFields(payload, ["${moduleNameLowerCase}Id"]);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "${moduleName} deleted",
+    data: result,
+  });
+});
 
-        const ${moduleNameLowerCase} = await ${moduleName}.deleteOne({
-        _id: payload.${moduleNameLowerCase}Id,
-        });
-
-        if (!${moduleNameLowerCase}.deletedCount)
-        throw new ApiError(status.NOT_FOUND, "${moduleName} not found");
-
-        return ${moduleNameLowerCase};
-    };
-
-    const ${moduleName}Service = {
-    post${moduleName},
-    get${moduleName},
-    getAll${moduleName}s,
-    update${moduleName},
-    delete${moduleName},
-    };
-
-    module.exports =  ${moduleName}Service ;  
-  `;
+const ${moduleName}Controller = {
+  create${moduleName},
+  get${moduleName},
+  getAll${moduleName}s,
+  update${moduleName},
+  delete${moduleName},
 };
 
-export = {
-  modelTemplate,
-  controllerTemplate,
-  routesTemplate,
-  serviceTemplate,
+export default ${moduleName}Controller;
+`;
+};
+
+export const routesTemplate = (moduleName: string): string => {
+  const moduleNameLowerCase = moduleName.toLowerCase();
+
+  return `
+import express from "express";
+import auth from "../../middleware/auth";
+import config from "../../../config";
+import ${moduleName}Controller from "./${moduleNameLowerCase}.controller";
+
+const router = express.Router();
+
+router
+  .post(
+    "/post-${moduleNameLowerCase}",
+    auth(config.auth_level.user),
+    ${moduleName}Controller.create${moduleName}
+  )
+  .get(
+    "/get-${moduleNameLowerCase}",
+    auth(config.auth_level.user),
+    ${moduleName}Controller.get${moduleName}
+  )
+  .get(
+    "/get-all-${moduleNameLowerCase}s",
+    auth(config.auth_level.user),
+    ${moduleName}Controller.getAll${moduleName}s
+  )
+  .patch(
+    "/update-${moduleNameLowerCase}",
+    auth(config.auth_level.user),
+    ${moduleName}Controller.update${moduleName}
+  )
+  .delete(
+    "/delete-${moduleNameLowerCase}",
+    auth(config.auth_level.user),
+    ${moduleName}Controller.delete${moduleName}
+  );
+
+export default router;
+`;
+};
+
+export const serviceTemplate = (moduleName: string): string => {
+  const moduleNameLowerCase = moduleName.toLowerCase();
+
+  return `
+import status from "http-status";
+import { ${moduleName} } from "./${moduleName}";
+import QueryBuilder from "../../../builder/queryBuilder";
+import ApiError from "../../../error/ApiError";
+import validateFields from "../../../util/validateFields";
+
+const create${moduleName} = async (
+  userData: any,
+  payload: any
+) => {
+  // Add your logic here
+};
+
+const get${moduleName} = async (
+  userData: any,
+  query: any
+) => {
+  validateFields(query, ["${moduleNameLowerCase}Id"]);
+
+  const ${moduleNameLowerCase} = await ${moduleName}
+    .findOne({
+      _id: query.${moduleNameLowerCase}Id,
+    })
+    .lean();
+
+  if (!${moduleNameLowerCase}) {
+    throw new ApiError(status.NOT_FOUND, "${moduleName} not found");
+  }
+
+  return ${moduleNameLowerCase};
+};
+
+const getAll${moduleName}s = async (
+  userData: any,
+  query: any
+) => {
+  const ${moduleNameLowerCase}Query = new QueryBuilder(
+    ${moduleName}.find({}).lean(),
+    query
+  )
+    .search([])
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const [${moduleNameLowerCase}s, meta] = await Promise.all([
+    ${moduleNameLowerCase}Query.modelQuery,
+    ${moduleNameLowerCase}Query.countTotal(),
+  ]);
+
+  return {
+    meta,
+    ${moduleNameLowerCase}s,
+  };
+};
+
+const update${moduleName} = async (
+  userData: any,
+  payload: any
+) => {
+  // Add your logic here
+};
+
+const delete${moduleName} = async (
+  userData: any,
+  payload: any
+) => {
+  validateFields(payload, ["${moduleNameLowerCase}Id"]);
+
+  const ${moduleNameLowerCase} = await ${moduleName}.deleteOne({
+    _id: payload.${moduleNameLowerCase}Id,
+  });
+
+  if (!${moduleNameLowerCase}.deletedCount) {
+    throw new ApiError(status.NOT_FOUND, "${moduleName} not found");
+  }
+
+  return ${moduleNameLowerCase};
+};
+
+const ${moduleName}Service = {
+  create${moduleName},
+  get${moduleName},
+  getAll${moduleName}s,
+  update${moduleName},
+  delete${moduleName},
+};
+
+export default ${moduleName}Service;
+`;
 };
