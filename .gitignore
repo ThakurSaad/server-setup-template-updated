@@ -1,5 +1,4 @@
 node_modules
-.env
 .vercel
 uploads/
 logs/
@@ -7,3 +6,4 @@ dist/
 entrypoint.sh
 yarn.lock
 package-lock.json
+config.bat
