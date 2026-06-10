@@ -1,10 +1,15 @@
+const { default: status } = require("http-status");
 import { Request, Response } from "express";
 import { FeedbackService } from "./feedback.service";
 import sendResponse from "../../../util/sendResponse";
 import catchAsync from "../../../util/catchAsync";
 import { QueryParams } from "../../../builder/queryBuilder";
+import ApiError from "../../../error/ApiError";
 
 const postFeedback = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(status.UNAUTHORIZED, "Unauthorized");
+  }
   const result = await FeedbackService.postFeedback(req.user, req.body);
   sendResponse(res, {
     statusCode: 200,
@@ -15,6 +20,9 @@ const postFeedback = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getFeedback = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(status.UNAUTHORIZED, "Unauthorized");
+  }
   const result = await FeedbackService.getFeedback(req.user, req.query);
   sendResponse(res, {
     statusCode: 200,
@@ -25,6 +33,9 @@ const getFeedback = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getMyFeedback = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(status.UNAUTHORIZED, "Unauthorized");
+  }
   const result = await FeedbackService.getMyFeedback(req.user);
   sendResponse(res, {
     statusCode: 200,
@@ -35,6 +46,9 @@ const getMyFeedback = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllFeedbacks = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(status.UNAUTHORIZED, "Unauthorized");
+  }
   const result = await FeedbackService.getAllFeedbacks(
     req.user,
     req.query as QueryParams,
@@ -49,6 +63,9 @@ const getAllFeedbacks = catchAsync(async (req: Request, res: Response) => {
 
 const updateFeedbackWithReply = catchAsync(
   async (req: Request, res: Response) => {
+    if (!req.user) {
+      throw new ApiError(status.UNAUTHORIZED, "Unauthorized");
+    }
     const result = await FeedbackService.updateFeedbackWithReply(
       req.user,
       req.body,
@@ -63,6 +80,9 @@ const updateFeedbackWithReply = catchAsync(
 );
 
 const deleteFeedback = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(status.UNAUTHORIZED, "Unauthorized");
+  }
   const result = await FeedbackService.deleteFeedback(req.user, req.body);
   sendResponse(res, {
     statusCode: 200,

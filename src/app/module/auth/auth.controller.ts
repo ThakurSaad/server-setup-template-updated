@@ -1,8 +1,10 @@
+const { default: status } = require("http-status");
 import { AuthService } from "./auth.service";
 import sendResponse from "../../../util/sendResponse";
 import catchAsync from "../../../util/catchAsync";
 import config from "../../../config";
 import { Request, Response } from "express";
+import ApiError from "../../../error/ApiError";
 
 const registrationAccount = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthService.registrationAccount(req.body);
@@ -62,6 +64,9 @@ const loginAccount = catchAsync(async (req: Request, res: Response) => {
 });
 
 const changePassword = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(status.UNAUTHORIZED, "Unauthorized");
+  }
   await AuthService.changePassword(req.user, req.body);
   sendResponse(res, {
     statusCode: 200,

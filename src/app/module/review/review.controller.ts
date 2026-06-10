@@ -1,8 +1,10 @@
+const { default: status } = require("http-status");
 import { Request, Response } from "express";
 import { ReviewService } from "./review.service";
 import sendResponse from "../../../util/sendResponse";
 import catchAsync from "../../../util/catchAsync";
 import { QueryParams } from "../../../builder/queryBuilder";
+import ApiError from "../../../error/ApiError";
 
 const postReview = catchAsync(async (req: Request, res: Response) => {
   const result = await ReviewService.postReview();
@@ -15,6 +17,9 @@ const postReview = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllReviews = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(status.UNAUTHORIZED, "Unauthorized");
+  }
   const result = await ReviewService.getAllReviews(
     req.user,
     req.query as QueryParams,
@@ -28,6 +33,9 @@ const getAllReviews = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getReview = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(status.UNAUTHORIZED, "Unauthorized");
+  }
   const result = await ReviewService.getReview(req.user, req.query);
   sendResponse(res, {
     statusCode: 200,
@@ -38,6 +46,9 @@ const getReview = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateReview = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(status.UNAUTHORIZED, "Unauthorized");
+  }
   const result = await ReviewService.updateReview(req.user, req.body);
   sendResponse(res, {
     statusCode: 200,
@@ -48,6 +59,9 @@ const updateReview = catchAsync(async (req: Request, res: Response) => {
 });
 
 const deleteReview = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(status.UNAUTHORIZED, "Unauthorized");
+  }
   const result = await ReviewService.deleteReview(req.user, req.query);
   sendResponse(res, {
     statusCode: 200,

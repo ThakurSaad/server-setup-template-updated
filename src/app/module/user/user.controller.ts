@@ -1,7 +1,9 @@
+const { default: status } = require("http-status");
 import { UserService } from "./user.service";
 import sendResponse from "../../../util/sendResponse";
 import catchAsync from "../../../util/catchAsync";
 import { Request, Response } from "express";
+import ApiError from "../../../error/ApiError";
 
 const updateProfile = catchAsync(async (req: Request, res: Response) => {
   const result = await UserService.updateProfile(req);
@@ -15,6 +17,9 @@ const updateProfile = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getProfile = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(status.UNAUTHORIZED, "Unauthorized");
+  }
   const result = await UserService.getProfile(req.user);
   sendResponse(res, {
     statusCode: 200,
