@@ -1,9 +1,15 @@
+const { default: status } = require("http-status");
 import { Request, Response } from "express";
-import {ChatService} from "./chat.service";
+import { ChatService } from "./chat.service";
 import sendResponse from "../../../util/sendResponse";
 import catchAsync from "../../../util/catchAsync";
+import { AuthUserPayload } from "../../../types/auth.types";
+import ApiError from "../../../error/ApiError";
 
 const postChat = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(status.UNAUTHORIZED, "Unauthorized");
+  }
   const result = await ChatService.postChat(req.user, req.body);
   sendResponse(res, {
     statusCode: 200,
@@ -14,6 +20,9 @@ const postChat = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getChatMessages = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(status.UNAUTHORIZED, "Unauthorized");
+  }
   const result = await ChatService.getChatMessages(req.user, req.query);
   sendResponse(res, {
     statusCode: 200,
@@ -24,6 +33,9 @@ const getChatMessages = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllChats = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(status.UNAUTHORIZED, "Unauthorized");
+  }
   const result = await ChatService.getAllChats(req.user, req.query);
   sendResponse(res, {
     statusCode: 200,
@@ -34,6 +46,9 @@ const getAllChats = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateMessageAsSeen = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(status.UNAUTHORIZED, "Unauthorized");
+  }
   const result = await ChatService.updateMessageAsSeen(req.user, req.body);
   sendResponse(res, {
     statusCode: 200,
@@ -50,4 +65,4 @@ const ChatController = {
   updateMessageAsSeen,
 };
 
-export {ChatController};
+export { ChatController };

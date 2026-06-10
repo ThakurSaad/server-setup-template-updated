@@ -1,10 +1,15 @@
+const { default: status } = require("http-status");
 import { NotificationService } from "./notification.service";
 import sendResponse from "../../../util/sendResponse";
 import catchAsync from "../../../util/catchAsync";
 import type { Request, Response } from "express";
 import { QueryParams } from "../../../builder/queryBuilder";
+import ApiError from "../../../error/ApiError";
 
 const getNotification = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(status.UNAUTHORIZED, "Unauthorized");
+  }
   const result = await NotificationService.getNotification(req.user, req.query);
   sendResponse(res, {
     statusCode: 200,
@@ -15,6 +20,9 @@ const getNotification = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllNotifications = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(status.UNAUTHORIZED, "Unauthorized");
+  }
   const result = await NotificationService.getAllNotifications(
     req.user,
     req.query as QueryParams,
@@ -29,6 +37,9 @@ const getAllNotifications = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateAsReadUnread = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(status.UNAUTHORIZED, "Unauthorized");
+  }
   const result = await NotificationService.updateAsReadUnread(
     req.user,
     req.body,
@@ -42,6 +53,9 @@ const updateAsReadUnread = catchAsync(async (req: Request, res: Response) => {
 });
 
 const deleteNotification = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new ApiError(status.UNAUTHORIZED, "Unauthorized");
+  }
   const result = await NotificationService.deleteNotification(
     req.user,
     req.body,
