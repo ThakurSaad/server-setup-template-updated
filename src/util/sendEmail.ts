@@ -9,7 +9,11 @@ const formattedDate = currentDate.toLocaleDateString("en-US", {
   day: "2-digit",
 });
 
-const sendEmail = async (options) => {
+const sendEmail = async (options: {
+  email: string;
+  subject: string;
+  html: string;
+}) => {
   const transporter = nodemailer.createTransport({
     host: config.smtp.smtp_host,
     service: config.smtp.smtp_service,
