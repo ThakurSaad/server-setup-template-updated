@@ -7,7 +7,6 @@ import User from "../user/User";
 import mongoose from "mongoose";
 import Message from "./Message";
 import { AuthUserPayload } from "../../../types/auth.types";
-import { PaginationMeta } from "../../../builder/queryBuilder";
 
 const postChat = async (
   userData: AuthUserPayload,
@@ -77,10 +76,7 @@ const getChatMessages = async (
   return chat;
 };
 
-const getAllChats = async (
-  userData: AuthUserPayload,
-  query: Record<string, unknown>,
-) => {
+const getAllChats = async (userData: AuthUserPayload) => {
   const userId = mongoose.Types.ObjectId.createFromHexString(userData.userId);
 
   const chats = await Chat.aggregate([

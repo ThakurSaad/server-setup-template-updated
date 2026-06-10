@@ -3,7 +3,6 @@ import { Request, Response } from "express";
 import { ChatService } from "./chat.service";
 import sendResponse from "../../../util/sendResponse";
 import catchAsync from "../../../util/catchAsync";
-import { AuthUserPayload } from "../../../types/auth.types";
 import ApiError from "../../../error/ApiError";
 
 const postChat = catchAsync(async (req: Request, res: Response) => {
@@ -36,7 +35,7 @@ const getAllChats = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) {
     throw new ApiError(status.UNAUTHORIZED, "Unauthorized");
   }
-  const result = await ChatService.getAllChats(req.user, req.query);
+  const result = await ChatService.getAllChats(req.user);
   sendResponse(res, {
     statusCode: 200,
     success: true,
