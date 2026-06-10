@@ -10,6 +10,7 @@
     "strict": true,
     "noImplicitAny": true,
     "esModuleInterop": true,
+    "strictNullChecks": false,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,

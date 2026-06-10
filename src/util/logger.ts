@@ -1,30 +1,25 @@
 import path from "path";
 import { createLogger, format, transports } from "winston";
+import { TransformableInfo } from "logform";
 import DailyRotateFile from "winston-daily-rotate-file";
 
 const { combine, timestamp, label, printf } = format;
 
-// Custom log format
-export const myFormat = printf(
-  ({
-    level,
-    message,
-    label,
-    timestamp,
-  }: {
-    label: string;
-    level: string;
-    timestamp: string;
-    message: string;
-  }) => {
-    const date = new Date(timestamp);
-    const h = date.getHours();
-    const m = date.getMinutes();
-    const s = date.getSeconds();
+interface LogInfo extends TransformableInfo {
+  label?: string;
+  timestamp?: string;
+}
 
-    return `${date.toDateString()} ${h}:${m}:${s} [${label}] ${level}: ${message}`;
-  },
-);
+// Custom log format
+export const myFormat = printf((info: LogInfo) => {
+  const { level, message, label, timestamp } = info;
+  const date = new Date(timestamp ?? Date.now());
+  const h = date.getHours();
+  const m = date.getMinutes();
+  const s = date.getSeconds();
+
+  return `${date.toDateString()} ${h}:${m}:${s} [${label}] ${level}: ${message}`;
+});
 
 const logDir = path.join(process.cwd(), "logs", "winston");
 

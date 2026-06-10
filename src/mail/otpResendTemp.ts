@@ -1,4 +1,10 @@
-const otpResendTemp = (data) => `
+const otpResendTemp = (data: {
+  user: string;
+  code: number;
+  expiresIn: number;
+  activationCode?: number;
+  activationCodeExpire?: number;
+}) => `
   <html>
     <head>
       <style>

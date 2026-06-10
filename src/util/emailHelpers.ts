@@ -18,7 +18,11 @@ const sendActivationEmail = async (
     await sendEmail({
       email,
       subject: "Activate Your Account",
-      html: signUpEmailTemp(data),
+      html: signUpEmailTemp({
+        user: data.user,
+        activationCode: data.activationCode,
+        activationCodeExpire: data.activationCodeExpire.toString(),
+      }),
     });
   } catch (error) {
     console.log(error);
@@ -38,7 +42,13 @@ const sendOtpResendEmail = async (
     await sendEmail({
       email,
       subject: "New Activation Code",
-      html: otpResendTemp(data),
+      html: otpResendTemp({
+        user: data.user,
+        code: Number(data.activationCode),
+        expiresIn: Number(data.activationCodeExpire),
+        activationCode: Number(data.activationCode),
+        activationCodeExpire: Number(data.activationCodeExpire),
+      }),
     });
   } catch (error) {
     console.log(error);
@@ -58,7 +68,11 @@ const sendResetPasswordEmail = async (
     await sendEmail({
       email,
       subject: "Password Reset Code",
-      html: resetPassEmailTemp(data),
+      html: resetPassEmailTemp({
+        name: data.user,
+        verificationCode: Number(data.verificationCode),
+        verificationCodeExpire: data.verificationCodeExpire,
+      }),
     });
   } catch (error) {
     console.log(error);

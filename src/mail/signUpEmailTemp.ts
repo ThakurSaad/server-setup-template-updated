@@ -1,4 +1,8 @@
-const signUpEmailTemp = (data) => `
+const signUpEmailTemp = (data: {
+  user: string;
+  activationCode: string;
+  activationCodeExpire: string;
+}) => `
   <html>
     <head>
       <style>

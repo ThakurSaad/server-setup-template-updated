@@ -1,4 +1,8 @@
-const resetPassEmailTemp = (data) => `
+const resetPassEmailTemp = (data: {
+  name: string;
+  verificationCode: number;
+  verificationCodeExpire: number;
+}) => `
   <html>
     <head>
       <style>
