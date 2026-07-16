@@ -1,104 +1,536 @@
-# Project Technical Documentation
+# Server Setup Template — Express + TypeScript + MongoDB
 
-This document serves as a comprehensive technical overview of the current project state. It is designed to act as a foundational context guide for AI assistants or developers aiming to use this repository as a starting template for future development.
+A production-oriented backend starter template built with **Express 5**, **TypeScript**, **Mongoose**, and **Socket.IO**, following a **modular monolith** architecture. It ships with a complete OTP-based authentication system, role-based authorization, real-time chat, file uploads, transactional email, structured logging, and a module generator — so a new project starts at the business-logic layer instead of the plumbing layer.
 
-## 1. High-Level Architecture
+## Table of Contents
 
-This project is a backend RESTful API built on the **Node.js** runtime using the **Express.js** framework. It implements a **Modular Monolith Architecture** meaning the business logic is split by domains (e.g., `user`, `auth`, `review`), and each domain has its own encapsulated components (Controllers, Services, Models, Routes).
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Environment Variables](#environment-variables)
+- [NPM Scripts](#npm-scripts)
+- [Authentication Flow](#authentication-flow)
+- [Authorization](#authorization)
+- [API Reference](#api-reference)
+- [Real-time Communication (Socket.IO)](#real-time-communication-socketio)
+- [Data Model](#data-model)
+- [Query Builder](#query-builder)
+- [Error Handling](#error-handling)
+- [File Uploads](#file-uploads)
+- [Logging](#logging)
+- [Module Generator](#module-generator)
+- [Code Quality](#code-quality)
+- [Further Documentation](#further-documentation)
 
-## 2. Technology Stack
+## Features
 
-- **Language/Runtime:** JavaScript / Node.js
-- **Framework:** Express.js (v5.x)
-- **Database Object Modeling (ODM):** Mongoose
-- **Database Engine:** MongoDB
-- **Authentication:** JSON Web Tokens (JWT) & `bcrypt` for password hashing
-- **Real-time Communication:** Socket.io
-- **Email Service:** Nodemailer (SMTP based)
-- **File Uploads:** Multer (with logic components in utilities)
-- **Background Jobs:** Node-cron
-- **Payment Gateway integrations:** Stripe
-- **Logging:** Winston & Winston Daily Rotate File
+- 🔐 **Full authentication lifecycle** — registration, email OTP activation, login, forgot/reset password, change password, with JWT access + refresh token pairs
+- 👥 **Role-based authorization** — `USER`, `DRIVER`, `ADMIN`, `SUPER_ADMIN` levels enforced by a single reusable `auth()` middleware
+- 🧱 **Modular monolith** — each domain (`auth`, `user`, `admin`, `chat`, `review`, `feedback`, `notification`, `manage`) is self-contained with its own model, controller, service, and routes
+- 💬 **Real-time chat & presence** — Socket.IO chat, online status, and live location updates sharing the same HTTP port
+- 📧 **Transactional email** — Nodemailer with styled HTML templates for sign-up OTP, OTP resend, and password reset
+- 🖼️ **File uploads** — Multer disk storage with MIME-type and field-name whitelisting, plus rollback helpers to delete orphaned files on failure
+- 🔎 **Chainable query builder** — search, filter, sort, paginate, and field-select any Mongoose query from URL parameters
+- ⏰ **Scheduled cleanup** — `node-cron` job prunes expired activation/verification codes every minute
+- 🚦 **Rate limiting** — login endpoint throttled via `express-rate-limit`
+- 🪵 **Structured logging** — Winston with daily-rotated log files, separate success/error streams
+- ⚡ **Module generator** — scaffold a new domain module (model, controller, service, routes) with one command
+- 🛡️ **Centralized error handling** — a single global handler normalizes Mongoose, Multer, JWT, and custom `ApiError` failures into one predictable JSON shape
 
-## 3. Directory Structure
+## Tech Stack
+
+| Layer          | Technology                                                         |
+| -------------- | ------------------------------------------------------------------ |
+| Runtime        | Node.js                                                            |
+| Language       | TypeScript (strict tooling: ESLint + typescript-eslint + Prettier) |
+| Framework      | Express 5                                                          |
+| Database       | MongoDB with Mongoose ODM                                          |
+| Real-time      | Socket.IO 4                                                        |
+| Auth           | JSON Web Tokens (`jsonwebtoken`) + `bcrypt` password hashing       |
+| Email          | Nodemailer (SMTP)                                                  |
+| Uploads        | Multer (disk storage)                                              |
+| Scheduling     | node-cron                                                          |
+| Payments       | Stripe SDK (pre-wired configuration)                               |
+| Logging        | Winston + winston-daily-rotate-file                                |
+| Dev experience | ts-node-dev (hot reload), tsx, rimraf                              |
+
+## Architecture
+
+The application is a **modular monolith**: one deployable unit, internally split by business domain. Every request flows through the same layered pipeline, and every module follows the same `routes → controller → service → model` convention.
+
+```mermaid
+flowchart TD
+    Client([Client / Mobile App])
+
+    subgraph Server["Node.js Process (single port)"]
+        direction TB
+        subgraph Transport
+            HTTP[Express 5 HTTP]
+            WS[Socket.IO WebSocket]
+        end
+
+        subgraph Pipeline["Request Pipeline"]
+            MW["Global Middleware<br/>CORS · JSON parser · cookies · static /uploads"]
+            AUTH["auth() middleware<br/>JWT verify + role check"]
+            RL["Rate limiter<br/>(login)"]
+            UP["Multer uploader<br/>(profile images)"]
+        end
+
+        subgraph Modules["Domain Modules (src/app/module)"]
+            A[auth]
+            U[user]
+            AD[admin]
+            CH[chat]
+            NO[notification]
+            RV[review]
+            FB[feedback]
+            MG[manage]
+        end
+
+        SVC["Services (business logic)"]
+        GEH["Global Error Handler"]
+        CRON["node-cron<br/>expired OTP cleanup"]
+    end
+
+    subgraph External
+        DB[(MongoDB)]
+        SMTP[SMTP / Gmail]
+        STRIPE[Stripe]
+    end
+
+    Client -->|REST| HTTP --> MW --> RL --> AUTH --> UP --> Modules
+    Client -->|WebSocket| WS --> Modules
+    Modules --> SVC
+    SVC -->|Mongoose| DB
+    SVC -->|OTP & reset emails| SMTP
+    SVC -.->|configured| STRIPE
+    Modules --> GEH
+    CRON --> DB
+```
+
+Key structural decisions:
+
+- **Split credential and profile data.** The `Auth` collection is the single authority for credentials, roles, OTP codes, and account status. Domain profiles (`User`, `Admin`) link to it via `authId`, so profile schemas never pollute the security model.
+- **HTTP and WebSocket share one server.** `src/connection/socket.ts` wraps the Express app in an `http.Server` and attaches Socket.IO to it, so REST and real-time traffic run on the same port.
+- **Services own the logic; controllers stay thin.** Controllers only extract request data and shape responses via `sendResponse`; every business rule lives in a service and throws `ApiError` on failure.
+
+## Project Structure
 
 ```
 ├── src/
 │   ├── app/
-│   │   ├── middleware/       # Shared Express middlewares (e.g., Auth checkers, Global Error Handlers)
-│   │   ├── module/           # Modularized domain logic
-│   │   │   ├── admin/
-│   │   │   ├── auth/         # Handles Registration, Login, OTP verification
-│   │   │   ├── chat/
-│   │   │   ├── dashboard/
-│   │   │   ├── feedback/
-│   │   │   ├── manage/
-│   │   │   ├── notification/ # Stores and retrieves system/app notifications
-│   │   │   ├── review/
-│   │   │   └── user/         # User profile definitions and mutations
-│   │   └── routes/           # Central API Router index mapping
-│   ├── config/               # Processes `.env` environmental variables
-│   ├── connection/           # System level connections
-│   │   ├── connectDB.js      # Mongoose MongoDB connection
-│   │   ├── socket.js         # Configures the Socket.io WebSocket server
-│   │   └── socketCors.js
-│   ├── error/                # Custom Error classes and custom error transformers
-│   │   ├── ApiError.js       # Standardized API Error Thrower
-│   │   ├── globalErrorHandler.js  # Main catcher and formatter
-│   │   └── NotFoundHandler.js
-│   ├── mail/                 # Email templates processing
-│   ├── util/                 # Project-wide utility helper scripts (e.g., `logger.js`, `jwtHelpers.js`, `generateModule.js`)
-│   ├── app.js                # Core Express application setup and bindings
-│   └── server.js             # Starting execution point linking Express, Sockets, and Mongoose
-├── .env.example              # Sample environment constraints needed to run the project
-└── package.json              # Includes dependency manifests and dev scripts (e.g., `make:file`)
+│   │   ├── middleware/           # auth (JWT + roles), fileUploader (Multer),
+│   │   │                         # globalErrorHandler, limiter (rate limit)
+│   │   ├── module/               # Domain modules — each contains:
+│   │   │   │                     #   <Name>.ts            Mongoose model
+│   │   │   │                     #   <name>.controller.ts HTTP layer
+│   │   │   │                     #   <name>.service.ts    business logic
+│   │   │   │                     #   <name>.routes.ts     Express router
+│   │   │   ├── admin/            # Admin profile management
+│   │   │   ├── auth/             # Registration, OTP activation, login, passwords
+│   │   │   ├── chat/             # 1-to-1 chat (Chat + Message models)
+│   │   │   ├── feedback/         # User feedback with admin replies
+│   │   │   ├── manage/           # CMS content: T&C, privacy, about, FAQ, contact
+│   │   │   ├── notification/     # In-app notifications (user + admin)
+│   │   │   ├── review/           # User reviews (CRUD)
+│   │   │   └── user/             # User profile management
+│   │   └── routes/index.ts       # Central router mounting every module
+│   ├── builder/queryBuilder.ts   # Chainable search/filter/sort/paginate helper
+│   ├── config/index.ts           # Typed access to .env + startup validation
+│   ├── connection/               # connectDB (Mongoose), socket (HTTP+WS server), socketCors
+│   ├── error/                    # ApiError + Mongoose/Multer error transformers + 404 handler
+│   ├── mail/                     # HTML email templates (sign-up, OTP resend, reset password)
+│   ├── socket/                   # Socket.IO event handlers, controllers, emit helpers
+│   ├── types/                    # Shared types + Express Request augmentation
+│   ├── util/                     # jwtHelpers, logger, sendEmail, catchAsync,
+│   │                             # codeGenerator, generateModule, sendResponse, ...
+│   ├── app.ts                    # Express app assembly (middleware + routes)
+│   └── server.ts                 # Entry point: DB connect + server listen
+├── docs/                         # Extended technical documentation
+├── .env.example                  # Template for required environment variables
+├── eslint.config.mjs             # Flat ESLint config (TS + Prettier)
+└── tsconfig.json
 ```
 
-## 4. Core System Workflows
+## Getting Started
 
-### Authentication and Authorization
+### Prerequisites
 
-The auth system uses a multi-layered approach involving **Two Databases Collections** conceptually tied together:
+- **Node.js** ≥ 18
+- **MongoDB** — a local instance or a MongoDB Atlas cluster
+- An **SMTP account** (e.g., Gmail app password) for OTP emails
 
-- `Auth`: Central authority for system credentials. Holds `email`, `password`, `role` (ADMIN, USER), OTP codes, and activation statuses.
-- `User` | `Admin`: Sub-profile attachments tied via the `authId`. These maintain separate, domain-specific profile details without polluting credentials logic.
-- **Registration Flow:** User registers -> System generates a 3-digit activation code -> Sends code to email (Nodemailer) -> Stores inactive user state.
-- **Activation Flow:** User inputs OTP -> System verifies OTP expiry -> State transitions to active -> JWT (Access/Refresh pairs) issued.
-- Periodic cleanup runs in the background (`node-cron`) to prune unverified, expired OTP credentials from the DB.
+### Installation
 
-### Error Handling
+```bash
+# 1. Clone and install
+git clone <repository-url>
+cd server-setup-template-updated
+npm install
 
-The repository employs centralized and graceful error handling strategies. Using an `ApiError` utility (combining http-status codes and custom messages), any errors thrown within modules are bubbled up to `globalErrorHandler`.
+# 2. Configure environment
+cp .env.example .env
+# then edit .env with your MongoDB URI, JWT secrets, and SMTP credentials
 
-- Auto-handles `ValidationError`, `CastError`, `MulterError`, `DuplicateKeyError`, etc.
-- Parses backend-specific errors and formats them into a strict, predictable JSON interface for frontend consumption:
-  ```json
-  {
-      "success": false,
-      "message": "Error reason",
-      "errorMessages": [...Array of specific field breakdowns]
-  }
-  ```
+# 3. Run in development (hot reload)
+npm run dev
+```
 
-### Real-time Communication
+The API is now available at `http://<BASE_URL>:<PORT>` (default `http://0.0.0.0:8001`). A `GET /` health check responds with a welcome message.
 
-Integrated via Socket.io, initialized in `src/connection/socket.js`. The project is already hooked up alongside the Express listening port dynamically allowing dual HTTP + WS usage over the single API port.
+### Production build
 
-## 5. Using as a Template: Best Practices
+```bash
+npm run build     # cleans dist/ and compiles TypeScript
+npm start         # runs the compiled dist/server.js
+```
 
-For AI assistants or developers utilizing this template structure:
+## Environment Variables
 
-1. **Domain Creation Script**: The project includes a `generateModule.js` inside `src/util`. You can invoke it via `npm run make:file` (or configure AI to utilize it) to instantly bootstrap standard boilerplate (`model`, `controller`, `service`, `routes`) folders and files for new entities within `src/app/module`.
-2. **Environment Setup**: Copy `.env.example` to `.env` locally. Key integrations require proper config strings: MongoDB URI, JWT Secrets, SMPT Credentials, and Stripe keys.
-3. **Database Interactions**: When building on top of the DB logic, ensure to rely on `lean()` during massive mongoose `.find()` fetches to improve performance logic, and remember that any authentication/role specific checking should run through the underlying `Auth` collection, not directly via domain structures unless for Profile fetching.
-4. **File handling**: There are strong unlinking tools existing under `src/util/unlinkFile.js` and `deleteUploadedFiles.js` to clear server memory footprint safely.
+All variables are read once in `src/config/index.ts`, which fails fast at startup if `JWT_SECRET` or `MONGO_URL` is missing.
 
-## 6. Base Database Collections
+| Variable                                   | Description                      | Example                                |
+| ------------------------------------------ | -------------------------------- | -------------------------------------- |
+| `NODE_ENV`                                 | Runtime environment              | `development`                          |
+| `BASE_URL`                                 | Host interface to bind           | `0.0.0.0`                              |
+| `PORT`                                     | HTTP + WebSocket port            | `8001`                                 |
+| `MONGO_URL`                                | MongoDB connection string        | `mongodb://localhost:27017/appDB`      |
+| `BCRYPT_SALT_ROUNDS`                       | bcrypt cost factor               | `12`                                   |
+| `JWT_SECRET`                               | Access-token signing secret      | _(long random string)_                 |
+| `JWT_EXPIRES_IN`                           | Access-token lifetime            | `1h`                                   |
+| `JWT_REFRESH_SECRET`                       | Refresh-token signing secret     | _(long random string)_                 |
+| `JWT_REFRESH_EXPIRES_IN`                   | Refresh-token lifetime           | `30d`                                  |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_SERVICE` | SMTP transport settings          | `smtp.gmail.com` / `587` / `gmail`     |
+| `SMTP_MAIL` / `SMTP_PASSWORD`              | Sender credentials               | `example@gmail.com` / _(app password)_ |
+| `SERVICE_NAME`                             | Product name used in emails      | `Mount Fuji`                           |
+| `STRIPE_SECRET_KEY`                        | Stripe API secret (optional)     | `sk_test_...`                          |
+| `EMAIL_TEMP_IMAGE`                         | Logo URL used in email templates | _(image URL)_                          |
 
-These are the core established collections, typically handled by their discrete domains:
+## NPM Scripts
 
-- `auths` - Core authentication / login credentials
-- `admins` - Profile specific schema mapped to `auth.role = ADMIN`
-- `users` - Profile specific schema mapped to `auth.role = USER`
-- `notifications` - App ecosystem notifications
-- `payments` - Ledger for Stripe/Financial interactions
+| Script                                    | Purpose                                                                  |
+| ----------------------------------------- | ------------------------------------------------------------------------ |
+| `npm run dev`                             | Development server with hot reload (`ts-node-dev`)                       |
+| `npm run build`                           | Clean `dist/` and compile TypeScript                                     |
+| `npm start`                               | Run compiled production build                                            |
+| `npm run typecheck`                       | Type-check without emitting                                              |
+| `npm run lint:check` / `lint:fix`         | ESLint check / auto-fix                                                  |
+| `npm run prettier:check` / `prettier:fix` | Formatting check / auto-format                                           |
+| `npm run make:file`                       | Scaffold a new domain module (see [Module Generator](#module-generator)) |
+
+## Authentication Flow
+
+Credentials live in the `Auth` collection; profile data lives in `User`/`Admin` linked by `authId`. New accounts stay inactive until the emailed 6-digit OTP (3-minute expiry) is confirmed. A cron job clears expired codes every minute.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor C as Client
+    participant API as Express API
+    participant DB as MongoDB
+    participant M as SMTP (Nodemailer)
+
+    rect rgba(120,120,120,0.08)
+    note over C,M: Registration & Activation
+    C->>API: POST /auth/register (name, email, password, role)
+    API->>DB: Create Auth (isActive=false, OTP + expiry) + User/Admin profile
+    API->>M: Send activation email with 6-digit OTP
+    API-->>C: "Check your email"
+    C->>API: POST /auth/activate-account (email, OTP)
+    API->>DB: Verify OTP → set isActive=true
+    API-->>C: accessToken + refreshToken (JWT)
+    end
+
+    rect rgba(120,120,120,0.08)
+    note over C,DB: Login
+    C->>API: POST /auth/login (email, password)
+    API->>DB: Verify bcrypt hash, isActive, isBlocked
+    API-->>C: accessToken + refreshToken (JWT)
+    end
+
+    rect rgba(120,120,120,0.08)
+    note over C,M: Password Reset
+    C->>API: POST /auth/forgot-password (email)
+    API->>M: Send reset OTP email
+    C->>API: POST /auth/forget-pass-otp-verify (email, code)
+    API->>DB: Mark isVerified=true
+    C->>API: POST /auth/reset-password (email, newPassword)
+    API->>DB: Store new bcrypt hash, clear verification state
+    end
+```
+
+JWT payloads carry `{ authId, userId, email, role }`, so downstream handlers can resolve both the credential record and the domain profile without extra lookups.
+
+## Authorization
+
+The `auth(roles)` middleware (`src/app/middleware/auth.ts`) verifies the `Bearer` token, confirms the account still exists, attaches the decoded payload to `req.user`, and enforces role membership. Access levels are defined centrally in `src/config/index.ts`:
+
+| Level                    | Roles allowed                  |
+| ------------------------ | ------------------------------ |
+| `auth_level.user`        | `USER`, `ADMIN`, `SUPER_ADMIN` |
+| `auth_level.admin`       | `ADMIN`, `SUPER_ADMIN`         |
+| `auth_level.super_admin` | `SUPER_ADMIN`                  |
+
+Passing `isAccessible = false` makes authentication optional for an endpoint (used by public feedback submission).
+
+## API Reference
+
+All routes are mounted at the root path by `src/app/routes/index.ts`. 🔒 = requires `Bearer` token.
+
+### Auth — `/auth`
+
+| Method | Endpoint                  | Access                | Description                                        |
+| ------ | ------------------------- | --------------------- | -------------------------------------------------- |
+| POST   | `/register`               | Public                | Create account; sends activation OTP email         |
+| POST   | `/login`                  | Public (rate-limited) | Login; returns JWT pair                            |
+| POST   | `/activate-account`       | Public                | Verify OTP; activates account and returns JWT pair |
+| POST   | `/activation-code-resend` | Public                | Re-issue activation OTP                            |
+| POST   | `/forgot-password`        | Public                | Send password-reset OTP                            |
+| POST   | `/forget-pass-otp-verify` | Public                | Verify reset OTP                                   |
+| POST   | `/reset-password`         | Public                | Set new password after OTP verification            |
+| PATCH  | `/change-password`        | 🔒 user               | Change password with old-password check            |
+
+### User — `/user` &nbsp;·&nbsp; Admin — `/admin`
+
+| Method | Endpoint          | Access          | Description                                     |
+| ------ | ----------------- | --------------- | ----------------------------------------------- |
+| GET    | `/profile`        | 🔒 user / admin | Get own profile (populated with auth data)      |
+| PATCH  | `/edit-profile`   | 🔒 user / admin | Update profile; supports `profile_image` upload |
+| DELETE | `/delete-account` | 🔒 user / admin | Delete own account                              |
+
+### Chat — `/chat`
+
+| Method | Endpoint                  | Access  | Description                                      |
+| ------ | ------------------------- | ------- | ------------------------------------------------ |
+| POST   | `/post-chat`              | 🔒 user | Start (or fetch) a chat with another participant |
+| GET    | `/get-chat-messages`      | 🔒 user | Paginated messages of a chat                     |
+| GET    | `/get-all-chats`          | 🔒 user | All chats of the current user                    |
+| PATCH  | `/update-message-as-seen` | 🔒 user | Mark messages as read                            |
+
+### Notification — `/notification`
+
+| Method | Endpoint                 | Access  | Description                        |
+| ------ | ------------------------ | ------- | ---------------------------------- |
+| GET    | `/get-notification`      | 🔒 user | Get a single notification          |
+| GET    | `/get-all-notifications` | 🔒 user | List own notifications (paginated) |
+| PATCH  | `/update-as-mark-unread` | 🔒 user | Toggle read/unread                 |
+| DELETE | `/delete-notification`   | 🔒 user | Delete a notification              |
+
+### Review — `/review`
+
+| Method | Endpoint           | Access  | Description                         |
+| ------ | ------------------ | ------- | ----------------------------------- |
+| POST   | `/post-review`     | 🔒 user | Create review                       |
+| GET    | `/get-review`      | 🔒 user | Get single review                   |
+| GET    | `/get-all-reviews` | 🔒 user | List reviews (search/sort/paginate) |
+| PATCH  | `/update-review`   | 🔒 user | Update own review                   |
+| DELETE | `/delete-review`   | 🔒 user | Delete review                       |
+
+### Feedback — `/feedback`
+
+| Method | Endpoint                      | Access                 | Description         |
+| ------ | ----------------------------- | ---------------------- | ------------------- |
+| POST   | `/post-feedback`              | Public (optional auth) | Submit feedback     |
+| GET    | `/get-feedback`               | 🔒 user                | Get single feedback |
+| GET    | `/get-all-feedbacks`          | 🔒 user                | List feedback       |
+| PATCH  | `/update-feedback-with-reply` | 🔒 admin               | Reply to feedback   |
+| DELETE | `/delete-feedback`            | 🔒 user                | Delete feedback     |
+
+### Manage (CMS) — `/manage`
+
+Admin-editable static content, publicly readable. Each content type — **terms-conditions**, **privacy-policy**, **about-us**, **faq**, **contact-us** — follows the same pattern:
+
+| Method | Endpoint pattern    | Access   |
+| ------ | ------------------- | -------- |
+| POST   | `/add-<content>`    | 🔒 admin |
+| GET    | `/get-<content>`    | Public   |
+| DELETE | `/delete-<content>` | 🔒 admin |
+
+## Real-time Communication (Socket.IO)
+
+Socket.IO is attached to the same HTTP server (`src/connection/socket.ts`). On connection, a client passes `userId` as a handshake query parameter; the server validates the user, joins them to a room named after their id (enabling direct emits), and marks them online.
+
+| Event                       | Direction       | Payload                           | Description                                                      |
+| --------------------------- | --------------- | --------------------------------- | ---------------------------------------------------------------- |
+| `connection` / `disconnect` | —               | `?userId=` handshake query        | Presence tracked automatically (`isOnline` on the User document) |
+| `online_status`             | server → client | `{ isOnline }`                    | Confirmation of presence change                                  |
+| `update_location`           | bidirectional   | `{ lat, long }`                   | Persists GeoJSON coordinates and broadcasts them                 |
+| `send_message`              | client → server | `{ chatId, receiverId, message }` | Persists the message and emits it to the receiver's room         |
+| `socket_error`              | server → client | error envelope                    | Emitted by `socketCatchAsync` on any handler failure             |
+
+Socket handlers mirror the HTTP conventions: `socketCatchAsync` wraps every handler, `emitResult`/`emitError` produce the same response envelope the REST API uses.
+
+## Data Model
+
+```mermaid
+erDiagram
+    AUTH ||--o| USER : "authId"
+    AUTH ||--o| ADMIN : "authId"
+    USER ||--o{ CHAT : "participants"
+    CHAT ||--o{ MESSAGE : "messages[]"
+    USER ||--o{ MESSAGE : "sender / receiver"
+    USER ||--o{ NOTIFICATION : "toId"
+    USER ||--o{ REVIEW : "writes"
+    USER ||--o{ FEEDBACK : "submits"
+
+    AUTH {
+        ObjectId _id PK
+        string name
+        string email UK
+        string password "bcrypt hash, select:false"
+        string role "USER | DRIVER | ADMIN | SUPER_ADMIN"
+        boolean isActive
+        boolean isBlocked
+        boolean isVerified
+        string activationCode "OTP (temp)"
+        date activationCodeExpire
+        string verificationCode "reset OTP (temp)"
+        date verificationCodeExpire
+    }
+
+    USER {
+        ObjectId _id PK
+        ObjectId authId FK
+        string name
+        string email
+        string profile_image
+        string phoneNumber
+        boolean isOnline
+        geojson locationCoordinates "Point"
+    }
+
+    ADMIN {
+        ObjectId _id PK
+        ObjectId authId FK
+        string name
+        string email
+        string profile_image
+    }
+
+    CHAT {
+        ObjectId _id PK
+        ObjectId[] participants FK
+        ObjectId[] messages FK
+    }
+
+    MESSAGE {
+        ObjectId _id PK
+        ObjectId sender FK
+        ObjectId receiver FK
+        string message
+        boolean isRead
+    }
+
+    NOTIFICATION {
+        ObjectId _id PK
+        ObjectId toId FK
+        string title
+        string message
+        boolean isRead
+    }
+```
+
+Separating `Auth` from profile collections keeps credential logic in one place: any account-status rule (blocking, activation, OTP) is enforced against `Auth`, while feature modules only ever touch profile documents.
+
+## Query Builder
+
+`src/builder/queryBuilder.ts` turns URL query strings into composed Mongoose queries:
+
+```
+GET /review/get-all-reviews?searchTerm=great&sort=-createdAt&page=2&limit=10&fields=rating,comment
+```
+
+```ts
+const reviewQuery = new QueryBuilder(Review.find(), req.query)
+  .search(["comment"]) // case-insensitive $regex across given fields
+  .filter() // remaining query params become exact-match filters
+  .sort() // comma-separated sort keys, defaults to -createdAt
+  .paginate() // page/limit with sane defaults
+  .fields(); // field projection
+
+const [meta, reviews] = await Promise.all([
+  reviewQuery.countTotal(), // { page, limit, total, totalPage }
+  reviewQuery.modelQuery,
+]);
+```
+
+## Error Handling
+
+All failures funnel into `globalErrorHandler`, which recognizes Mongoose `ValidationError`/`CastError`, duplicate-key errors, Multer errors, and the project's `ApiError` class, then responds with a stable contract:
+
+```json
+{
+  "success": false,
+  "message": "Human-readable reason",
+  "errorMessages": [
+    { "path": "email", "message": "Please provide a valid email address" }
+  ],
+  "stack": "shown outside production only"
+}
+```
+
+Successful responses are equally uniform via `sendResponse`:
+
+```json
+{
+  "statusCode": 200,
+  "success": true,
+  "message": "Reviews retrieved",
+  "meta": { "page": 1, "limit": 10, "total": 42, "totalPage": 5 },
+  "data": []
+}
+```
+
+Controllers never use try/catch — the `catchAsync` wrapper forwards rejected promises to the error pipeline (with `socketCatchAsync` as the WebSocket counterpart).
+
+## File Uploads
+
+`uploadFile()` (`src/app/middleware/fileUploader.ts`) configures Multer disk storage under `uploads/<fieldname>/`:
+
+- Whitelisted MIME types: `image/jpeg`, `image/png`, `image/jpg`, `image/webp`
+- Whitelisted field names (currently `profile_image`) — unknown fields are rejected
+- Every stored path is tracked on `req.uploadedFiles`, so `deleteUploadedFiles` can roll back writes if the request later fails
+- Uploaded files are served statically at `/uploads/...`
+
+## Logging
+
+Winston is configured in `src/util/logger.ts` with two streams:
+
+- `logger` — application/info logs
+- `errorLogger` — failures (also captures `unhandledRejection` / `uncaughtException`)
+
+Both write to console and to **daily-rotated files** under `logs/`, keeping production logs bounded and greppable by date.
+
+## Module Generator
+
+To add a new domain, scaffold the standard four files with:
+
+```bash
+npm run make:file
+```
+
+This generates `Model.ts`, `*.controller.ts`, `*.service.ts`, and `*.routes.ts` from the templates in `src/util/fileTemplates.ts`, pre-wired with `catchAsync`, `sendResponse`, `QueryBuilder` usage, and the project's naming conventions. After generating, mount the new router in `src/app/routes/index.ts`. (Set the module name in `src/util/generateModule.ts` before running — see `docs/` for planned CLI-argument support.)
+
+## Code Quality
+
+- **TypeScript** across the entire codebase (fully migrated from JavaScript)
+- **ESLint flat config** with `typescript-eslint` recommended rules
+- **Prettier** enforced via `prettier:check`, with `lint-staged` configured for pre-commit fixing
+- `npm run typecheck` for CI-friendly type validation without emitting
+
+## Further Documentation
+
+Extended documentation lives in [`docs/`](./docs):
+
+| Document                                                                                                    | Contents                                                        |
+| ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| [`project_technical_documentation.md`](./docs/project_technical_documentation.md)                           | Deep technical overview for developers/AI assistants            |
+| [`migration_guide.md`](./docs/migration_guide.md) / [`migration_analysis.md`](./docs/migration_analysis.md) | JavaScript → TypeScript migration notes                         |
+| [`issues_and_improvements.md`](./docs/issues_and_improvements.md)                                           | Known issues, security review findings, and improvement roadmap |
+| [`template_review_and_improvements.md`](./docs/template_review_and_improvements.md)                         | Earlier template review                                         |
+
+---
+
+**Author:** thakur-saad · **License:** ISC
