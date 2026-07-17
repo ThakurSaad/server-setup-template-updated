@@ -1,17 +1,21 @@
 # TypeScript Migration Guide
 
 ## Detection Result (This Repo)
+
 This project is CommonJS in practice, not ESM.
 
 **Evidence from your repo:**
+
 - `package.json` has no `"type": "module"`.
 - Entry files `src/app.js` and `src/server.js` use `require(...)` and `module.exports`.
 - Domain files under `src/app/module` follow CommonJS exports/imports.
 
 ## Strategy Choice
+
 Use **incremental migration** (not big-bang).
 
 **Why this is safest for your exact codebase:**
+
 - Many modules have hidden JS issues that TS will expose (missing imports, undefined symbols, request augmentation needs).
 - You want minimal breakage and unchanged behavior.
 - Incremental lets `allowJs` keep app running while converting module-by-module.
@@ -22,9 +26,11 @@ Use **incremental migration** (not big-bang).
 ## Phase 0 - Baseline and Safety Snapshot
 
 ### Goal
+
 Create a safe starting point and baseline behavior before touching code.
 
 ### Commands
+
 ```bash
 git checkout -b chore/ts-migration
 npm install
@@ -33,14 +39,17 @@ npm run start
 ```
 
 ### Exact file changes
+
 No file changes yet.
 
 ### Verification checklist
+
 - [ ] Server boots on current JS path.
 - [ ] `GET /` returns the same response as now.
 - [ ] Auth login/register routes still respond as before.
 
 ### Rollback tip
+
 ```bash
 git reset --hard
 git switch main
@@ -51,9 +60,11 @@ git switch main
 ## Phase 1 - Tooling Bootstrap (No Runtime Behavior Change)
 
 ### Goal
+
 Add TypeScript build/run/lint pipeline while still supporting JS files.
 
 ### Commands
+
 ```bash
 npm i -D typescript tsx rimraf eslint @eslint/js typescript-eslint prettier @types/node @types/express @types/cors @types/cookie-parser @types/jsonwebtoken @types/multer @types/nodemailer @types/validator @types/bcrypt
 ```
@@ -61,6 +72,7 @@ npm i -D typescript tsx rimraf eslint @eslint/js typescript-eslint prettier @typ
 ### Exact file changes
 
 **Update `package.json` scripts:**
+
 ```diff
  {
    "scripts": {
@@ -92,6 +104,7 @@ npm i -D typescript tsx rimraf eslint @eslint/js typescript-eslint prettier @typ
 ```
 
 **Add `tsconfig.json` at repo root:**
+
 ```json
 {
   "compilerOptions": {
@@ -117,6 +130,7 @@ npm i -D typescript tsx rimraf eslint @eslint/js typescript-eslint prettier @typ
 ```
 
 **Add `eslint.config.mjs`:**
+
 ```javascript
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
@@ -129,20 +143,25 @@ export default defineConfig(
   {
     rules: {
       "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
-      "@typescript-eslint/no-explicit-any": "off"
-    }
-  }
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_" },
+      ],
+      "@typescript-eslint/no-explicit-any": "off",
+    },
+  },
 );
 ```
 
 ### Verification checklist
+
 - [ ] `npm run typecheck`
 - [ ] `npm run build`
 - [ ] `dist/` is generated.
 - [ ] JS runtime path still works with `npm run start:js`.
 
 ### Rollback tip
+
 Keep this phase in its own commit.
 If build script causes issues, temporarily keep `start` and `dev` pointing to JS scripts.
 
@@ -151,9 +170,11 @@ If build script causes issues, temporarily keep `start` and `dev` pointing to JS
 ## Phase 2 - Shared Types and Express Augmentation
 
 ### Goal
+
 Enable safe typing for `req.user`, `req.uploadedFiles`, and auth payloads without changing behavior.
 
 ### Commands
+
 ```bash
 New-Item -ItemType Directory -Force src/types | Out-Null
 ```
@@ -161,6 +182,7 @@ New-Item -ItemType Directory -Force src/types | Out-Null
 ### Exact file changes
 
 **Add `src/types/auth.types.ts`:**
+
 ```typescript
 export type AppRole = "USER" | "ADMIN" | "SUPER_ADMIN" | "DRIVER";
 
@@ -175,6 +197,7 @@ export interface AuthUserPayload {
 ```
 
 **Add `src/types/express.d.ts`:**
+
 ```typescript
 import type { AuthUserPayload } from "./auth.types";
 
@@ -191,6 +214,7 @@ export {};
 ```
 
 **Add `src/types/common.types.ts`:**
+
 ```typescript
 export interface ApiResponse<T = unknown> {
   statusCode: number;
@@ -203,10 +227,12 @@ export interface ApiResponse<T = unknown> {
 ```
 
 ### Verification checklist
+
 - [ ] `npm run typecheck`
 - [ ] No TS error about `req.user` type definition file loading.
 
 ### Rollback tip
+
 If augmentation is not detected, ensure file is under `src/**/*` and includes `export {}`.
 
 ---
@@ -214,9 +240,11 @@ If augmentation is not detected, ensure file is under `src/**/*` and includes `e
 ## Phase 3 - Convert Core Runtime First
 
 ### Goal
+
 Convert app bootstrap/core utilities before domain modules.
 
 ### Commands
+
 ```bash
 git mv src/app.js src/app.ts
 git mv src/server.js src/server.ts
@@ -230,20 +258,22 @@ git mv src/app/middleware/globalErrorHandler.js src/app/middleware/globalErrorHa
 ### Exact file changes
 
 **`src/util/jwtHelpers.ts`:**
+
 ```typescript
 import jwt from "jsonwebtoken";
 
 export const createToken = (
   payload: object,
   secret: string,
-  expireTime: string
+  expireTime: string,
 ): string => jwt.sign(payload, secret, { expiresIn: expireTime });
 
 export const createResetToken = (
   payload: object,
   secret: string,
-  expireTime: string
-): string => jwt.sign(payload, secret, { algorithm: "HS256", expiresIn: expireTime });
+  expireTime: string,
+): string =>
+  jwt.sign(payload, secret, { algorithm: "HS256", expiresIn: expireTime });
 
 export const verifyToken = <T>(token: string, secret: string): T =>
   jwt.verify(token, secret) as T;
@@ -252,25 +282,33 @@ export const jwtHelpers = { createToken, verifyToken, createResetToken };
 ```
 
 **`src/util/catchAsync.ts`** (important fix: missing import currently exists in JS):
+
 ```typescript
 import type { NextFunction, Request, Response } from "express";
 import deleteUploadedFiles from "./deleteUploadedFiles";
 
-type AsyncHandler = (req: Request, res: Response, next: NextFunction) => Promise<unknown>;
+type AsyncHandler = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => Promise<unknown>;
 
-const catchAsync = (fn: AsyncHandler) => async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    return await fn(req, res, next);
-  } catch (error) {
-    deleteUploadedFiles(req.uploadedFiles);
-    next(error);
-  }
-};
+const catchAsync =
+  (fn: AsyncHandler) =>
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      return await fn(req, res, next);
+    } catch (error) {
+      deleteUploadedFiles(req.uploadedFiles);
+      next(error);
+    }
+  };
 
 export default catchAsync;
 ```
 
 **`src/util/sendResponse.ts`:**
+
 ```typescript
 import type { Response } from "express";
 import type { ApiResponse } from "../types/common.types";
@@ -282,10 +320,11 @@ const sendResponse = <T>(res: Response, data: ApiResponse<T>) => {
     message: data.message ?? null,
     meta: data.meta ?? undefined,
     data: data.data ?? null,
-    activationToken: data.activationToken ?? null
+    activationToken: data.activationToken ?? null,
   };
 
-  if (responseData.activationToken === null) delete responseData.activationToken;
+  if (responseData.activationToken === null)
+    delete responseData.activationToken;
   res.status(data.statusCode).json(responseData);
 };
 
@@ -293,6 +332,7 @@ export default sendResponse;
 ```
 
 ### Verification checklist
+
 - [ ] `npm run typecheck`
 - [ ] `npm run build`
 - [ ] `npm run start`
@@ -300,6 +340,7 @@ export default sendResponse;
 - [ ] Root route still returns same payload.
 
 ### Rollback tip
+
 If boot fails, temporarily switch `dev` to `dev:js` and convert one file at a time.
 
 ---
@@ -307,9 +348,11 @@ If boot fails, temporarily switch `dev` to `dev:js` and convert one file at a ti
 ## Phase 4 - Auth + Mongoose Model Typing
 
 ### Goal
+
 Type the highest-risk path first: JWT auth + OTP + cron + user payload.
 
 ### Commands
+
 ```bash
 git mv src/app/module/auth/Auth.js src/app/module/auth/Auth.ts
 git mv src/app/module/auth/auth.service.js src/app/module/auth/auth.service.ts
@@ -321,6 +364,7 @@ git mv src/app/middleware/auth.js src/app/middleware/auth.ts
 ### Exact file changes
 
 **Model typing pattern (`Auth.ts`):**
+
 ```typescript
 import { Schema, model, type Model } from "mongoose";
 import bcrypt from "bcrypt";
@@ -343,22 +387,45 @@ interface IAuth {
 
 interface AuthModel extends Model<IAuth> {
   isAuthExist(email: string): Promise<IAuth | null>;
-  isPasswordMatched(givenPassword: string, savedPassword: string): Promise<boolean>;
+  isPasswordMatched(
+    givenPassword: string,
+    savedPassword: string,
+  ): Promise<boolean>;
 }
 
-const AuthSchema = new Schema<IAuth, AuthModel>({ /* keep same schema */ }, { timestamps: true });
+const AuthSchema = new Schema<IAuth, AuthModel>(
+  {/* keep same schema */},
+  { timestamps: true },
+);
 
 AuthSchema.statics.isAuthExist = function (email: string) {
-  return this.findOne({ email }, { name: 1, email: 1, password: 1, role: 1, isActive: 1, isBlocked: 1, isVerified: 1 });
+  return this.findOne(
+    { email },
+    {
+      name: 1,
+      email: 1,
+      password: 1,
+      role: 1,
+      isActive: 1,
+      isBlocked: 1,
+      isVerified: 1,
+    },
+  );
 };
 
-AuthSchema.statics.isPasswordMatched = function (givenPassword: string, savedPassword: string) {
+AuthSchema.statics.isPasswordMatched = function (
+  givenPassword: string,
+  savedPassword: string,
+) {
   return bcrypt.compare(givenPassword, savedPassword);
 };
 
 AuthSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
-  this.password = await bcrypt.hash(this.password, Number(config.bcrypt_salt_rounds));
+  this.password = await bcrypt.hash(
+    this.password,
+    Number(config.bcrypt_salt_rounds),
+  );
   next();
 });
 
@@ -366,6 +433,7 @@ export default model<IAuth, AuthModel>("Auth", AuthSchema);
 ```
 
 **Auth middleware (`auth.ts`) with typed payload:**
+
 ```typescript
 import type { NextFunction, Request, Response } from "express";
 import { status as httpStatus } from "http-status";
@@ -381,18 +449,30 @@ const auth =
     try {
       const tokenWithBearer = req.headers.authorization;
       if (!tokenWithBearer && !isAccessible) return next();
-      if (!tokenWithBearer) throw new ApiError(httpStatus.UNAUTHORIZED, "You are not authorized for this role");
-      if (!tokenWithBearer.startsWith("Bearer ")) throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid token format");
+      if (!tokenWithBearer)
+        throw new ApiError(
+          httpStatus.UNAUTHORIZED,
+          "You are not authorized for this role",
+        );
+      if (!tokenWithBearer.startsWith("Bearer "))
+        throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid token format");
 
       const token = tokenWithBearer.split(" ")[1];
-      const verifyUser = jwtHelpers.verifyToken<AuthUserPayload>(token, config.jwt.secret);
+      const verifyUser = jwtHelpers.verifyToken<AuthUserPayload>(
+        token,
+        config.jwt.secret,
+      );
       req.user = verifyUser;
 
       const isExist = await Auth.findById(verifyUser.authId);
-      if (!isExist) throw new ApiError(httpStatus.UNAUTHORIZED, "You are not authorized");
+      if (!isExist)
+        throw new ApiError(httpStatus.UNAUTHORIZED, "You are not authorized");
 
       if (roles.length && !roles.includes(verifyUser.role)) {
-        throw new ApiError(httpStatus.FORBIDDEN, "Access Forbidden: You do not have permission to perform this action");
+        throw new ApiError(
+          httpStatus.FORBIDDEN,
+          "Access Forbidden: You do not have permission to perform this action",
+        );
       }
 
       next();
@@ -405,12 +485,15 @@ export default auth;
 ```
 
 ### Verification checklist
+
 - [ ] Registration/login/activation still work.
 - [ ] `req.user` is recognized in controllers.
 - [ ] Cron cleanup still executes from auth service.
 
 ### Rollback tip
+
 If auth path breaks, revert just auth files:
+
 ```bash
 git checkout -- src/app/module/auth src/app/middleware/auth.ts
 ```
@@ -420,9 +503,11 @@ git checkout -- src/app/module/auth src/app/middleware/auth.ts
 ## Phase 5 - Type Socket, Multer, Error Handler, Stripe/Nodemailer Helpers
 
 ### Goal
+
 Cover the non-REST parts that usually break TypeScript migrations.
 
 ### Commands
+
 ```bash
 git mv src/connection/socket.js src/connection/socket.ts
 git mv src/socket/socketHandlers.js src/socket/socketHandlers.ts
@@ -436,6 +521,7 @@ git mv src/util/emailHelpers.js src/util/emailHelpers.ts
 ### Exact file changes
 
 **Add `src/socket/socket.types.ts`:**
+
 ```typescript
 export interface ServerToClientEvents {
   send_message: (payload: unknown) => void;
@@ -445,11 +531,16 @@ export interface ServerToClientEvents {
 }
 
 export interface ClientToServerEvents {
-  send_message: (payload: { receiverId: string; chatId: string; message: string }) => void;
+  send_message: (payload: {
+    receiverId: string;
+    chatId: string;
+    message: string;
+  }) => void;
 }
 ```
 
 **Type Multer middleware (`fileUploader.ts`):**
+
 ```typescript
 import multer from "multer";
 import fs from "fs";
@@ -463,7 +554,8 @@ const uploadFile = () => {
   const storage = multer.diskStorage({
     destination(req: Request, file, cb) {
       const uploadPath = `uploads/${file.fieldname}`;
-      if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath, { recursive: true });
+      if (!fs.existsSync(uploadPath))
+        fs.mkdirSync(uploadPath, { recursive: true });
       if (allowedMimeTypes.includes(file.mimetype)) cb(null, uploadPath);
       else cb(new Error("Invalid file type"));
     },
@@ -472,7 +564,7 @@ const uploadFile = () => {
       if (!req.uploadedFiles) req.uploadedFiles = [];
       req.uploadedFiles.push(`uploads/${file.fieldname}/${name}`);
       cb(null, name);
-    }
+    },
   });
 
   return multer({ storage }).fields([{ name: "profile_image", maxCount: 1 }]);
@@ -482,21 +574,24 @@ export { uploadFile };
 ```
 
 **Stripe typing pattern for future usage:**
+
 ```typescript
 import Stripe from "stripe";
 import config from "../config";
 
 export const stripeClient = new Stripe(config.stripe.stripe_secret_key, {
-  apiVersion: "2025-03-31.basil"
+  apiVersion: "2025-03-31.basil",
 });
 ```
 
 ### Verification checklist
+
 - [ ] Socket connection/disconnect works.
 - [ ] File upload still stores under same folders.
 - [ ] Email sender still compiles and sends.
 
 ### Rollback tip
+
 Keep socket and multer in separate commits, so you can revert one subsystem without losing the other.
 
 ---
@@ -504,10 +599,13 @@ Keep socket and multer in separate commits, so you can revert one subsystem with
 ## Phase 6 - Convert Remaining Domain Modules in Controlled Batches
 
 ### Goal
+
 Finish module-by-module conversion without destabilizing the whole app.
 
 ### Commands
+
 Run this sequence per module folder:
+
 ```bash
 git mv src/app/module/user/*.js src/app/module/user/
 git mv src/app/module/admin/*.js src/app/module/admin/
@@ -518,24 +616,30 @@ git mv src/app/module/manage/*.js src/app/module/manage/
 git mv src/app/module/dashboard/*.js src/app/module/dashboard/
 git mv src/app/module/chat/*.js src/app/module/chat/
 ```
+
 Then rename extensions manually to `.ts` in each batch and fix imports/types before next batch:
+
 ```bash
 npm run typecheck
 npm run build
 ```
 
 ### Exact file changes
+
 Use this exact pattern in each service/controller:
+
 - Add request/user payload types.
 - Replace `module.exports` with `export default` or named exports consistently.
 - Keep business logic unchanged.
 - Fix only compile blockers, not feature behavior.
 
 ### Verification checklist
+
 - [ ] After each module batch, run typecheck/build/start.
 - [ ] Hit at least one route from that module.
 
 ### Rollback tip
+
 If one module explodes, `git restore` that folder and proceed with another, then return.
 
 ---
@@ -543,9 +647,11 @@ If one module explodes, `git restore` that folder and proceed with another, then
 ## Phase 7 - Migrate Module Generator to TypeScript-Ready Output
 
 ### Goal
+
 New generated modules should be `.ts` and compile immediately.
 
 ### Commands
+
 ```bash
 git mv src/util/fileTemplates.js src/util/fileTemplates.ts
 git mv src/util/generateModule.js src/util/generateModule.ts
@@ -556,20 +662,24 @@ git mv src/util/generateModule.js src/util/generateModule.ts
 In `fileTemplates.ts`, generate `import`/`export` TS syntax and typed stubs.
 
 In `generateModule.ts`, accept module name from CLI:
+
 ```typescript
 const moduleName = process.argv[2];
 if (!moduleName) throw new Error("Usage: npm run make:file -- <ModuleName>");
 ```
+
 - Write `.ts` files, not `.js`.
 - Create module path under `src/app/module/<moduleNameLowerCase>` (current script points to wrong directory under util).
 
 ### Verification checklist
+
 - [ ] `npm run make:file -- TestModule`
 - [ ] `npm run typecheck`
 - [ ] New files generated in correct module directory.
 - [ ] Generated files compile.
 
 ### Rollback tip
+
 Keep old JS generator as `generateModule.legacy.js` until this phase is green.
 
 ---
@@ -577,15 +687,19 @@ Keep old JS generator as `generateModule.legacy.js` until this phase is green.
 ## Phase 8 - Final Cutover and Strictness Ramp
 
 ### Goal
+
 Remove JS fallback, enforce TS-only build, keep behavior unchanged.
 
 ### Commands
+
 ```bash
 npm run build
 npm run start
 npm run lint:check
 ```
+
 Then tighten `tsconfig.json`:
+
 ```diff
 - "allowJs": true,
 - "strict": false,
@@ -596,17 +710,20 @@ Then tighten `tsconfig.json`:
 ```
 
 ### Exact file changes
+
 - Remove `dev:js` and `start:js` when fully green.
 - Keep `dist/` output for production.
 - Ensure imports no longer point to `.js` files.
 
 ### Verification checklist
+
 - [ ] `npm run typecheck` passes with `allowJs: false`.
 - [ ] `npm run build` passes clean.
 - [ ] `npm run start` serves same API responses.
 - [ ] Socket, auth, file upload, cron, email still operational.
 
 ### Rollback tip
+
 If strict mode causes too many blockers, keep `strict: false`, ship, then tighten rule-by-rule later.
 
 ---
@@ -641,6 +758,7 @@ If strict mode causes too many blockers, keep `strict: false`, ship, then tighte
 ---
 
 ## Definition of Done
+
 - [ ] All source files under `src` are `.ts` or `.d.ts`.
 - [ ] `allowJs` is `false`.
 - [ ] `npm run typecheck` passes.

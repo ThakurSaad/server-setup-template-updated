@@ -1,6 +1,8 @@
 # Issues & Improvement Roadmap
 
 > Full-codebase review performed on 2026-07-16. Findings are ordered by severity; each includes the file reference and a recommended fix. Items marked **🔴 Critical** are security bugs that should be fixed before any production deployment.
+>
+> **✅ Status (2026-07-16): all 26 findings have been remediated** following `implementation_plan.md`. File references below describe the code as it was at review time and are kept for historical context. Two additional latent bugs were found and fixed during implementation: `http-status` was mis-imported in several files (making `httpStatus.UNAUTHORIZED` etc. `undefined`, so auth errors surfaced as 500s), and user documents were created with an incomplete GeoJSON `locationCoordinates` stub that broke 2dsphere indexing.
 
 ## 🔴 Critical — Security
 
